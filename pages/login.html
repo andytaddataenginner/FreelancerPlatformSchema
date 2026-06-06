@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:1.8rem">
+      <a href="../index.html" style="font-family:var(--serif);font-size:1.5rem;color:var(--ink)">YourName<span class="dot">.</span></a>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="subtitle">Sign in to your account to continue</p>
+
+    <div id="alert-box" class="alert alert-error" style="display:none"></div>
+
+    <form class="auth-form" id="login-form" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" name="email" placeholder="you@example.com" required autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password"/>
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">Sign in</button>
+    </form>
+    <p class="auth-link" style="margin-top:1.2rem">
+      <a href="../index.html">← Back to portfolio</a>
+    </p>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+// Redirect if already logged in
+(function() {
+  if (auth.isLoggedIn()) {
+    const u = auth.user();
+    window.location.href = u && u.role === 'client' ? 'client-portal.html' : 'dashboard.html';
+  }
+})();
+
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('login-btn');
+  const alert = document.getElementById('alert-box');
+  const form = e.target;
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+  alert.style.display = 'none';
+
+  try {
+    const data = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: form.email.value, password: form.password.value })
+    });
+    auth.save(data.token, data.user);
+    window.location.href = data.user.role === 'client' ? 'client-portal.html' : 'dashboard.html';
+  } catch (err) {
+    alert.textContent = err.message || 'Invalid email or password.';
+    alert.style.display = 'block';
+    btn.textContent = 'Sign in';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

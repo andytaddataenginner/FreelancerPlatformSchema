@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Your Name — Freelancer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">YourName<span class="dot">.</span></div>
+  <div class="nav-links">
+    <a href="#work">Work</a>
+    <a href="#services">Services</a>
+    <a href="#contact">Contact</a>
+    <a href="pages/login.html" class="btn-nav">Client Login</a>
+  </div>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="menu">&#9776;</button>
+</nav>
+
+<header class="hero">
+  <div class="hero-tag">Available for work</div>
+  <h1 class="hero-title">
+    Freelance <em>Developer</em><br/>& Digital Craftsman
+  </h1>
+  <p class="hero-sub">I build clean, thoughtful digital products for clients who care about craft. Based anywhere, working everywhere.</p>
+  <div class="hero-cta">
+    <a href="#contact" class="btn-primary">Start a project</a>
+    <a href="#work" class="btn-ghost">See my work</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num" id="stat-clients">—</span><span class="stat-label">Happy clients</span></div>
+    <div class="stat"><span class="stat-num" id="stat-projects">—</span><span class="stat-label">Projects done</span></div>
+    <div class="stat"><span class="stat-num" id="stat-years">5+</span><span class="stat-label">Years experience</span></div>
+  </div>
+</header>
+
+<section id="work" class="section">
+  <div class="section-header">
+    <div class="label">Portfolio</div>
+    <h2>Selected Work</h2>
+  </div>
+  <div class="portfolio-grid" id="portfolio-grid">
+    <div class="portfolio-card skeleton"></div>
+    <div class="portfolio-card skeleton"></div>
+    <div class="portfolio-card skeleton"></div>
+  </div>
+</section>
+
+<section id="services" class="section section-alt">
+  <div class="section-header">
+    <div class="label">What I do</div>
+    <h2>Services</h2>
+  </div>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">⚡</div>
+      <h3>Web Development</h3>
+      <p>Full-stack web applications built with modern technologies, optimized for performance and maintainability.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🎨</div>
+      <h3>UI/UX Design</h3>
+      <p>Interfaces that are beautiful and intuitive. From wireframes to polished high-fidelity designs.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📊</div>
+      <h3>Consulting</h3>
+      <p>Technical strategy, code reviews, architecture planning, and team guidance for your digital projects.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🔧</div>
+      <h3>Maintenance</h3>
+      <p>Ongoing support, bug fixes, performance improvements, and feature additions for existing products.</p>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="section">
+  <div class="contact-inner">
+    <div class="label">Get in touch</div>
+    <h2>Let's work together</h2>
+    <p>Have a project in mind? I'd love to hear about it. Send me a message and I'll get back to you within 24 hours.</p>
+    <form class="contact-form" id="contact-form" onsubmit="submitContact(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Your name</label>
+          <input type="text" name="name" placeholder="Jane Smith" required/>
+        </div>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" name="email" placeholder="jane@example.com" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tell me about your project</label>
+        <textarea name="message" rows="5" placeholder="I need help with..." required></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Send message →</button>
+      <div id="contact-status" class="form-status"></div>
+    </form>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">YourName<span class="dot">.</span></div>
+    <div class="footer-links">
+      <a href="#">GitHub</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">Twitter</a>
+    </div>
+    <div class="footer-copy">© 2025 YourName. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

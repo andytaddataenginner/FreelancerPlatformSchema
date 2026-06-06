@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">YourName<span style="color:var(--accent)">.</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="active">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer</span><br/>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <h2 class="page-title">Dashboard</h2>
+    <p class="page-sub" id="greeting">Good morning</p>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num" id="s-hours">—</span>
+        <span class="stat-label">Hours this month</span>
+        <div class="stat-change" id="s-hours-change"></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-clients">—</span>
+        <span class="stat-label">Active clients</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-tasks">—</span>
+        <span class="stat-label">Tasks this month</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-bookings">—</span>
+        <span class="stat-label">Upcoming bookings</span>
+      </div>
+    </div>
+
+    <!-- Timer card -->
+    <div class="card">
+      <div class="card-header">
+        <h3>⏱ Live Timer</h3>
+        <select id="timer-client" style="max-width:200px">
+          <option value="">Select client…</option>
+        </select>
+      </div>
+      <input type="text" id="timer-task" placeholder="Task description (optional)" style="margin-bottom:1rem"/>
+      <div class="timer-display" id="timer-display">00:00:00</div>
+      <div class="timer-controls">
+        <button class="btn-sm btn-green" id="btn-start" onclick="startTimer()">▶ Start</button>
+        <button class="btn-sm btn-red" id="btn-stop" onclick="stopTimer()" style="display:none">■ Stop & Save</button>
+        <button class="btn-sm btn-outline" onclick="resetTimer()">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- Quick log + recent logs side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:1.5rem;align-items:start">
+      <!-- Manual log -->
+      <div class="card">
+        <div class="card-header"><h3>✏️ Manual Log Entry</h3></div>
+        <form onsubmit="submitManualLog(event)" style="display:flex;flex-direction:column;gap:0.9rem">
+          <div class="form-group">
+            <label>Client</label>
+            <select name="client_id" required id="manual-client">
+              <option value="">Select client…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" name="date" required id="log-date"/>
+          </div>
+          <div class="form-group">
+            <label>Hours spent</label>
+            <input type="number" name="hours" min="0.25" max="24" step="0.25" placeholder="e.g. 2.5" required/>
+          </div>
+          <div class="form-group">
+            <label>Task description</label>
+            <textarea name="task_description" rows="3" placeholder="What did you work on?" required></textarea>
+          </div>
+          <button type="submit" class="btn-primary btn-sm" style="padding:0.65rem 1.2rem">Add Log Entry</button>
+          <div id="log-status" class="form-status"></div>
+        </form>
+      </div>
+
+      <!-- Recent logs -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Logs</h3>
+          <a href="time-logs.html" style="font-size:0.82rem;color:var(--accent)">View all →</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Client</th><th>Date</th><th>Hours</th><th>Task</th></tr>
+            </thead>
+            <tbody id="recent-logs">
+              <tr><td colspan="4" style="color:var(--ink3);text-align:center;padding:1.5rem">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add New Client</h3>
+      <button class="modal-close" onclick="closeModal('modal-client')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="addClient(event)">
+      <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="form-group"><label>Email address</label><input type="email" name="email" required/></div>
+      <div class="form-group"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="form-group"><label>Temporary password</label><input type="text" name="password" required placeholder="They can change this later"/></div>
+      <button type="submit" class="btn-primary">Create client account</button>
+      <div id="client-status" class="form-status"></div>
+    </form>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script>
+// ── Auth guard ──────────────────────────────────────────────
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  const u = auth.user();
+  if (u && u.role !== 'freelancer') { window.location.href = 'client-portal.html'; return; }
+  document.getElementById('user-name').textContent = u ? u.name : '';
+
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    h < 12 ? 'Good morning 🌅' : h < 17 ? 'Good afternoon ☀️' : 'Good evening 🌙';
+})();
+
+// ── Set today as default date ────────────────────────────────
+document.getElementById('log-date').value = new Date().toISOString().slice(0,10);
+
+// ── Logout ──────────────────────────────────────────────────
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+// ── Load dashboard data ──────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [stats, clients, logs] = await Promise.all([
+      apiFetch('/stats/freelancer'),
+      apiFetch('/clients'),
+      apiFetch('/timelogs?limit=6')
+    ]);
+
+    document.getElementById('s-hours').textContent = stats.hoursThisMonth || 0;
+    document.getElementById('s-clients').textContent = stats.activeClients || 0;
+    document.getElementById('s-tasks').textContent = stats.tasksThisMonth || 0;
+    document.getElementById('s-bookings').textContent = stats.upcomingBookings || 0;
+
+    // Populate client dropdowns
+    const opts = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('timer-client').innerHTML = '<option value="">Select client…</option>' + opts;
+    document.getElementById('manual-client').innerHTML = '<option value="">Select client…</option>' + opts;
+
+    // Recent logs table
+    const tbody = document.getElementById('recent-logs');
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--ink3);text-align:center;padding:1.5rem">No logs yet. Add your first one!</td></tr>';
+    } else {
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td>${l.client_name}</td>
+          <td>${new Date(l.date).toLocaleDateString()}</td>
+          <td><strong>${l.hours}h</strong></td>
+          <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.task_description}</td>
+        </tr>
+      `).join('');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+loadDashboard();
+
+// ── Timer ────────────────────────────────────────────────────
+let timerInterval = null, timerSeconds = 0, timerRunning = false;
+
+function updateTimerDisplay() {
+  const h = Math.floor(timerSeconds/3600).toString().padStart(2,'0');
+  const m = Math.floor((timerSeconds%3600)/60).toString().padStart(2,'0');
+  const s = (timerSeconds%60).toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent = `${h}:${m}:${s}`;
+}
+
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  timerInterval = setInterval(() => { timerSeconds++; updateTimerDisplay(); }, 1000);
+  document.getElementById('btn-start').style.display = 'none';
+  document.getElementById('btn-stop').style.display = 'inline-block';
+}
+
+async function stopTimer() {
+  if (!timerRunning) return;
+  clearInterval(timerInterval);
+  timerRunning = false;
+
+  const hours = Math.round(timerSeconds / 36) / 100; // round to 2dp
+  const clientId = document.getElementById('timer-client').value;
+  const task = document.getElementById('timer-task').value;
+
+  if (!clientId) { alert('Please select a client before stopping the timer.'); startTimer(); return; }
+  if (hours < 0.01) { alert('Timer is too short to log.'); resetTimer(); return; }
+
+  try {
+    await apiFetch('/timelogs', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: clientId,
+        hours,
+        task_description: task || 'Timed session',
+        date: new Date().toISOString().slice(0,10),
+        source: 'timer'
+      })
+    });
+    alert(`✓ Logged ${hours} hours successfully!`);
+    resetTimer();
+    loadDashboard();
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+  }
+
+  document.getElementById('btn-start').style.display = 'inline-block';
+  document.getElementById('btn-stop').style.display = 'none';
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  updateTimerDisplay();
+  document.getElementById('btn-start').style.display = 'inline-block';
+  document.getElementById('btn-stop').style.display = 'none';
+}
+
+// ── Manual log ───────────────────────────────────────────────
+async function submitManualLog(e) {
+  e.preventDefault();
+  const form = e.target;
+  const status = document.getElementById('log-status');
+  try {
+    await apiFetch('/timelogs', {
+      method: 'POST',
+      body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), source: 'manual' })
+    });
+    status.className = 'form-status success';
+    status.textContent = '✓ Log entry saved!';
+    form.reset();
+    document.getElementById('log-date').value = new Date().toISOString().slice(0,10);
+    loadDashboard();
+    setTimeout(() => status.textContent = '', 3000);
+  } catch(e) {
+    status.className = 'form-status error';
+    status.textContent = e.message;
+  }
+}
+
+// ── Add client ───────────────────────────────────────────────
+async function addClient(e) {
+  e.preventDefault();
+  const status = document.getElementById('client-status');
+  try {
+    await apiFetch('/clients', {
+      method: 'POST',
+      body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+    });
+    status.className = 'form-status success';
+    status.textContent = '✓ Client created!';
+    e.target.reset();
+    loadDashboard();
+  } catch(err) {
+    status.className = 'form-status error';
+    status.textContent = err.message;
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+</script>
+</body>
+</html>
