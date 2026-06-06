@@ -1,6 +1,6 @@
 // ── Config ──────────────────────────────────────────────────
 const API = window.location.hostname === 'localhost'
-  ? 'https://freelancerplatform-h1j4.onrender.com'
+  ? 'https://freelancer-platform-9jut.onrender.com/'
   : 'https://your-app-name.onrender.com/api'; // ← Update this after deploying to Render
 
 // ── Auth helpers ─────────────────────────────────────────────
