@@ -1,6 +1,6 @@
 // ── Config ──────────────────────────────────────────────────
 const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000/api'
+  ? 'https://freelancerplatformschema.onrender.com'
   : 'https://your-app-name.onrender.com/api'; // ← Update this after deploying to Render
 
 // ── Auth helpers ─────────────────────────────────────────────
