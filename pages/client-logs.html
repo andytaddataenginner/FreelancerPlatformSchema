@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Time Logs — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">YourName<span style="color:var(--accent)">.</span></div>
+    <nav class="sidebar-nav">
+      <a href="client-portal.html">📊 My Overview</a>
+      <a href="client-logs.html" class="active">⏱ My Time Logs</a>
+      <a href="client-schedule.html">📅 Book a Session</a>
+      <a href="../index.html" target="_blank">🌐 Portfolio</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <h2 class="page-title">My Time Logs</h2>
+    <p class="page-sub">All hours logged for your projects. See what's paid and what's outstanding.</p>
+
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:0.6rem;margin-bottom:1.2rem">
+      <button class="btn-sm" id="tab-all"    onclick="switchTab('all')"    style="background:var(--ink);color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">All</button>
+      <button class="btn-sm" id="tab-unpaid" onclick="switchTab('unpaid')" style="background:transparent;color:var(--ink2);border:1.5px solid var(--paper3);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">⚠ Unpaid</button>
+      <button class="btn-sm" id="tab-paid"   onclick="switchTab('paid')"   style="background:transparent;color:var(--ink2);border:1.5px solid var(--paper3);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">✓ Paid</button>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="stats-row" style="margin-bottom:1.5rem">
+      <div class="stat-card" style="border-left:4px solid #1a6640">
+        <span class="stat-num" id="s-paid" style="color:#1a6640">$—</span>
+        <span class="stat-label">Total paid</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #92400e">
+        <span class="stat-num" id="s-unpaid" style="color:#92400e">$—</span>
+        <span class="stat-label">Outstanding balance</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-hours">—</span>
+        <span class="stat-label">Total hours</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="s-entries">—</span>
+        <span class="stat-label">Log entries</span>
+      </div>
+    </div>
+
+    <!-- Logs table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 id="table-title">All Work Logs</h3>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Hours</th>
+              <th>Amount</th>
+              <th>Payment Status</th>
+              <th>Task Description</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table">
+            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="table-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2)"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  const u = auth.user();
+  if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
+  document.getElementById('user-name').textContent = u ? u.name : '';
+})();
+function logout() { auth.clear(); window.location.href = '../index.html'; }
+
+let allLogs = [];
+let currentTab = 'all';
+
+async function loadLogs() {
+  try {
+    const [logs, stats] = await Promise.all([
+      apiFetch('/client/timelogs?limit=200'),
+      apiFetch('/client/stats')
+    ]);
+    allLogs = logs;
+
+    document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
+    document.getElementById('s-entries').textContent = logs.length;
+
+    renderLogs(allLogs);
+  } catch(e) { console.error(e); }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  // Update button styles
+  ['all','unpaid','paid'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    btn.style.background = t === tab ? 'var(--ink)' : 'transparent';
+    btn.style.color      = t === tab ? 'white'      : 'var(--ink2)';
+    btn.style.border     = t === tab ? 'none'        : '1.5px solid var(--paper3)';
+  });
+  const titles = { all: 'All Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
+  document.getElementById('table-title').textContent = titles[tab];
+  const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
+  renderLogs(filtered);
+}
+
+function renderLogs(logs) {
+  const tbody  = document.getElementById('logs-table');
+  const footer = document.getElementById('table-footer');
+
+  if (!logs.length) {
+    const msg = currentTab === 'unpaid' ? 'No unpaid logs — all settled! ✓'
+              : currentTab === 'paid'   ? 'No paid logs yet.'
+              : 'No logs found yet.';
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${msg}</td></tr>`;
+    footer.textContent = '';
+    return;
+  }
+
+  let sumHours = 0, sumAmount = 0;
+  tbody.innerHTML = logs.map(l => {
+    const isPaid  = l.payment_status === 'paid';
+    const amount  = parseFloat(l.amount || 0);
+    sumHours  += parseFloat(l.hours || 0);
+    sumAmount += amount;
+
+    const badge = isPaid
+      ? '<span class="badge badge-green">✓ Paid</span>'
+      : '<span class="badge badge-amber">⚠ Unpaid</span>';
+
+    return `
+      <tr style="${!isPaid ? 'background:rgba(255,200,100,0.04)' : ''}">
+        <td>${new Date(l.date).toLocaleDateString()}</td>
+        <td><strong>${l.hours}h</strong></td>
+        <td>${amount > 0 ? '<strong>$' + amount.toFixed(2) + '</strong>' : '—'}</td>
+        <td>${badge}</td>
+        <td>${l.task_description}</td>
+      </tr>`;
+  }).join('');
+
+  footer.innerHTML = `Showing <strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> total &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong> total`;
+}
+
+loadLogs();
+</script>
+</body>
+</html>
