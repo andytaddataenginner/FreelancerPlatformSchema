@@ -3,11 +3,14 @@ const express = require('express');
 const cors    = require('cors');
 const app     = express();
 
-// ── Middleware ───────────────────────────────────────────────
+// ── CORS — allow all origins (fixes network error) ──────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
+app.options('*', cors());
 app.use(express.json());
 
 // ── Routes ───────────────────────────────────────────────────
