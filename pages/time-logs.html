@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Logs — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">YourName<span style="color:var(--accent)">.</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html" class="active">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer</span><br/>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <h2 class="page-title">Time Logs</h2>
+    <p class="page-sub">All your logged hours. Mark entries as paid when client pays you.</p>
+
+    <!-- Filters -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-group" style="flex:1;min-width:150px">
+          <label>Client</label>
+          <select id="filter-client" onchange="loadLogs()">
+            <option value="">All clients</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:130px">
+          <label>Payment status</label>
+          <select id="filter-payment" onchange="loadLogs()">
+            <option value="">All</option>
+            <option value="unpaid">Unpaid only</option>
+            <option value="paid">Paid only</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:130px">
+          <label>From date</label>
+          <input type="date" id="filter-from" onchange="loadLogs()"/>
+        </div>
+        <div class="form-group" style="flex:1;min-width:130px">
+          <label>To date</label>
+          <input type="date" id="filter-to" onchange="loadLogs()"/>
+        </div>
+        <button class="btn-outline btn-sm" onclick="clearFilters()" style="padding:0.5rem 1rem">Clear</button>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="stats-row" style="margin-bottom:1.5rem">
+      <div class="stat-card" style="border-left:4px solid #1a6640">
+        <span class="stat-num" id="total-paid" style="color:#1a6640">$—</span>
+        <span class="stat-label">Total paid</span>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #92400e">
+        <span class="stat-num" id="total-unpaid" style="color:#92400e">$—</span>
+        <span class="stat-label">Total unpaid</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="total-hours">—</span>
+        <span class="stat-label">Total hours</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="total-entries">—</span>
+        <span class="stat-label">Log entries</span>
+      </div>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div id="bulk-bar" style="display:none;background:var(--ink);color:white;padding:0.8rem 1.2rem;border-radius:10px;margin-bottom:1rem;display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <span id="bulk-count" style="font-size:0.9rem">0 selected</span>
+      <div style="display:flex;gap:0.6rem">
+        <button class="btn-sm btn-green" onclick="bulkMarkPaid()">✓ Mark all selected as Paid</button>
+        <button class="btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="clearSelection()">Clear selection</button>
+      </div>
+    </div>
+
+    <!-- Logs table -->
+    <div class="card">
+      <div class="card-header">
+        <h3>All Time Logs</h3>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn-sm btn-outline" onclick="selectAllVisible()">Select all</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px"><input type="checkbox" id="check-all" onchange="toggleAll(this)"/></th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Hours</th>
+              <th>Rate type</th>
+              <th>Amount ($)</th>
+              <th>Payment</th>
+              <th>Task</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="logs-table">
+            <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+let selectedIds = new Set();
+
+async function loadLogs() {
+  const client  = document.getElementById('filter-client').value;
+  const payment = document.getElementById('filter-payment').value;
+  const from    = document.getElementById('filter-from').value;
+  const to      = document.getElementById('filter-to').value;
+
+  let url = '/timelogs?limit=200';
+  if (client)  url += '&client_id='       + client;
+  if (payment) url += '&payment_status='  + payment;
+  if (from)    url += '&from='            + from;
+  if (to)      url += '&to='              + to;
+
+  try {
+    const logs = await apiFetch(url);
+    const tbody = document.getElementById('logs-table');
+
+    let totalPaid=0, totalUnpaid=0, totalHours=0;
+
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--ink3)">No logs found.</td></tr>';
+    } else {
+      tbody.innerHTML = logs.map(l => {
+        const isPaid = l.payment_status === 'paid';
+        const amount = parseFloat(l.amount||0);
+        if (isPaid) totalPaid += amount; else totalUnpaid += amount;
+        totalHours += parseFloat(l.hours||0);
+
+        const badge = isPaid
+          ? '<span class="badge badge-green">Paid</span>'
+          : '<span class="badge badge-amber">Unpaid</span>';
+        const btn = isPaid
+          ? `<button class="btn-sm btn-outline" onclick="togglePayment(${l.id},'unpaid')">Undo paid</button>`
+          : `<button class="btn-sm btn-green" onclick="togglePayment(${l.id},'paid')">Mark paid ✓</button>`;
+        const checked = selectedIds.has(l.id) ? 'checked' : '';
+        const rowBg = isPaid ? '' : 'background:rgba(255,200,100,0.05)';
+
+        return `
+          <tr style="${rowBg}">
+            <td><input type="checkbox" class="row-check" value="${l.id}" ${checked} onchange="updateSelection(${l.id},this.checked)"/></td>
+            <td><strong>${l.client_name}</strong></td>
+            <td>${new Date(l.date).toLocaleDateString()}</td>
+            <td>${l.hours}h</td>
+            <td><span class="badge ${l.rate_type==='fixed'?'badge-blue':'badge-green'}">${l.rate_type||'hourly'}</span></td>
+            <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+            <td>${badge}</td>
+            <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+            <td style="display:flex;gap:0.4rem;flex-wrap:wrap">
+              ${btn}
+              <button class="btn-sm btn-red" onclick="deleteLog(${l.id})">Delete</button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('total-paid').textContent   = '$' + totalPaid.toFixed(2);
+    document.getElementById('total-unpaid').textContent = '$' + totalUnpaid.toFixed(2);
+    document.getElementById('total-hours').textContent  = totalHours.toFixed(1) + 'h';
+    document.getElementById('total-entries').textContent = logs.length;
+    updateBulkBar();
+  } catch(e) { console.error(e); }
+}
+
+function updateSelection(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+}
+
+function toggleAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => {
+    c.checked = cb.checked;
+    updateSelection(parseInt(c.value), cb.checked);
+  });
+}
+
+function selectAllVisible() {
+  document.querySelectorAll('.row-check').forEach(c => {
+    c.checked = true;
+    selectedIds.add(parseInt(c.value));
+  });
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.row-check').forEach(c => c.checked = false);
+  document.getElementById('check-all').checked = false;
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  if (selectedIds.size > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('bulk-count').textContent = selectedIds.size + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+async function bulkMarkPaid() {
+  if (!selectedIds.size) return;
+  if (!confirm(`Mark ${selectedIds.size} log(s) as paid?`)) return;
+  try {
+    await apiFetch('/timelogs/bulk-payment', { method: 'PATCH', body: JSON.stringify({ ids: [...selectedIds], payment_status: 'paid' }) });
+    clearSelection();
+    loadLogs();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+async function togglePayment(id, status) {
+  try {
+    await apiFetch('/timelogs/' + id + '/payment', { method: 'PATCH', body: JSON.stringify({ payment_status: status }) });
+    loadLogs();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+async function deleteLog(id) {
+  if (!confirm('Delete this log entry?')) return;
+  try { await apiFetch('/timelogs/' + id, { method: 'DELETE' }); loadLogs(); }
+  catch(e) { alert('Failed: ' + e.message); }
+}
+
+function clearFilters() {
+  document.getElementById('filter-client').value  = '';
+  document.getElementById('filter-payment').value = '';
+  document.getElementById('filter-from').value    = '';
+  document.getElementById('filter-to').value      = '';
+  loadLogs();
+}
+
+async function init() {
+  try {
+    const clients = await apiFetch('/clients');
+    const opts = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('filter-client').innerHTML = '<option value="">All clients</option>' + opts;
+  } catch(e) {}
+  loadLogs();
+}
+init();
+</script>
+</body>
+</html>
