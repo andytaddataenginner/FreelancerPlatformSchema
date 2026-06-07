@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schedule — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">YourName<span style="color:var(--accent)">.</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html" class="active">📅 Schedule</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer</span><br/>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <h2 class="page-title">Schedule</h2>
+    <p class="page-sub">View and manage client booking requests.</p>
+
+    <div class="stats-row" style="margin-bottom:1.5rem">
+      <div class="stat-card"><span class="stat-num" id="s-pending">—</span><span class="stat-label">Pending requests</span></div>
+      <div class="stat-card"><span class="stat-num" id="s-confirmed">—</span><span class="stat-label">Confirmed</span></div>
+      <div class="stat-card"><span class="stat-num" id="s-upcoming">—</span><span class="stat-label">Upcoming (7 days)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>All Bookings</h3>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn-sm btn-outline" onclick="filterBookings('all')">All</button>
+          <button class="btn-sm btn-outline" onclick="filterBookings('pending')">Pending</button>
+          <button class="btn-sm btn-outline" onclick="filterBookings('confirmed')">Confirmed</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Client</th><th>Date & Time</th><th>Type</th><th>Duration</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="bookings-table">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+let allBookings = [];
+
+async function loadBookings() {
+  try {
+    allBookings = await apiFetch('/schedule');
+    const now = new Date();
+    const in7 = new Date(); in7.setDate(in7.getDate()+7);
+    document.getElementById('s-pending').textContent   = allBookings.filter(b=>b.status==='pending').length;
+    document.getElementById('s-confirmed').textContent = allBookings.filter(b=>b.status==='confirmed').length;
+    document.getElementById('s-upcoming').textContent  = allBookings.filter(b=>new Date(b.date)>=now && new Date(b.date)<=in7 && b.status!=='cancelled').length;
+    renderBookings(allBookings);
+  } catch(e) { console.error(e); }
+}
+
+function filterBookings(status) {
+  const filtered = status === 'all' ? allBookings : allBookings.filter(b => b.status === status);
+  renderBookings(filtered);
+}
+
+function renderBookings(bookings) {
+  const tbody = document.getElementById('bookings-table');
+  if (!bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = bookings.map(b => {
+    const badgeClass = b.status==='confirmed' ? 'badge-green' : b.status==='pending' ? 'badge-amber' : 'badge-gray';
+    const actions = b.status === 'pending'
+      ? `<button class="btn-sm btn-green" onclick="updateStatus(${b.id},'confirmed')">Confirm</button>
+         <button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')" style="margin-left:4px">Cancel</button>`
+      : b.status === 'confirmed'
+      ? `<button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>`
+      : '—';
+    return `
+      <tr>
+        <td><strong>${b.client_name}</strong><br/><span style="font-size:0.78rem;color:var(--ink3)">${b.client_email}</span></td>
+        <td>${new Date(b.date).toLocaleDateString()} at ${b.time}</td>
+        <td>${b.type_label || b.type}</td>
+        <td>${b.duration}h</td>
+        <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.message || '—'}</td>
+        <td><span class="badge ${badgeClass}">${b.status}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function updateStatus(id, status) {
+  try {
+    await apiFetch('/schedule/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
+    loadBookings();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadBookings();
+</script>
+</body>
+</html>

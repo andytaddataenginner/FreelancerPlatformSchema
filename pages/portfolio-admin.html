@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio — YourName</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">YourName<span style="color:var(--accent)">.</span></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="portfolio-admin.html" class="active">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-name">Loading…</strong>
+      <span>Freelancer</span><br/>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <h2 class="page-title">Portfolio</h2>
+    <p class="page-sub">Manage the projects shown on your public homepage.</p>
+
+    <div style="margin-bottom:1.5rem">
+      <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add('open')">+ Add Project</button>
+      <a href="../index.html#work" target="_blank" class="btn-outline btn-sm" style="margin-left:0.8rem;padding:0.5rem 1.2rem;display:inline-block">View public site →</a>
+    </div>
+
+    <div id="portfolio-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem">
+      <p style="color:var(--ink3)">Loading…</p>
+    </div>
+  </main>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Project</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
+    </div>
+    <form class="modal-form" onsubmit="addProject(event)">
+      <div class="form-group"><label>Project title</label><input type="text" name="title" required/></div>
+      <div class="form-group"><label>Description</label><textarea name="description" rows="3" required></textarea></div>
+      <div class="form-group"><label>Category (e.g. Web App, Dashboard)</label><input type="text" name="category"/></div>
+      <div class="form-group"><label>Emoji icon</label><input type="text" name="emoji" placeholder="💻" maxlength="2"/></div>
+      <div class="form-group"><label>Project URL (optional)</label><input type="url" name="url" placeholder="https://..."/></div>
+      <button type="submit" class="btn-primary">Add to portfolio</button>
+      <div id="add-status" class="form-status"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const auth = {
+  token: () => localStorage.getItem('token'),
+  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
+  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
+  isLoggedIn: () => !!localStorage.getItem('token'),
+  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
+};
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
+  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
+  return res.json();
+}
+(function() {
+  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+  document.getElementById('user-name').textContent = auth.user()?.name || '';
+})();
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+async function loadPortfolio() {
+  try {
+    const items = await apiFetch('/portfolio');
+    const list = document.getElementById('portfolio-list');
+    if (!items.length) { list.innerHTML = '<p style="color:var(--ink3)">No projects yet.</p>'; return; }
+    list.innerHTML = items.map(item => `
+      <div class="card" style="margin-bottom:0">
+        <div style="font-size:2.5rem;margin-bottom:0.8rem">${item.emoji || '💻'}</div>
+        <div style="font-weight:600;margin-bottom:0.3rem">${item.title}</div>
+        <div style="font-size:0.8rem;color:var(--accent);margin-bottom:0.5rem">${item.category || ''}</div>
+        <div style="font-size:0.85rem;color:var(--ink2);margin-bottom:1rem">${item.description || ''}</div>
+        <div style="display:flex;gap:0.6rem;align-items:center">
+          <span class="badge ${item.is_published ? 'badge-green' : 'badge-gray'}">${item.is_published ? 'Published' : 'Hidden'}</span>
+          <button class="btn-sm btn-outline" onclick="togglePublish(${item.id}, ${item.is_published})">${item.is_published ? 'Hide' : 'Show'}</button>
+          <button class="btn-sm btn-red" onclick="deleteProject(${item.id})">Delete</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function addProject(e) {
+  e.preventDefault();
+  const status = document.getElementById('add-status');
+  try {
+    await apiFetch('/portfolio', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    status.className = 'form-status success'; status.textContent = '✓ Added!';
+    e.target.reset();
+    setTimeout(() => { document.getElementById('modal-add').classList.remove('open'); status.textContent=''; }, 1000);
+    loadPortfolio();
+  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+}
+
+async function togglePublish(id, current) {
+  try {
+    await apiFetch('/portfolio/' + id, { method: 'PUT', body: JSON.stringify({ is_published: !current }) });
+    loadPortfolio();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project from your portfolio?')) return;
+  try { await apiFetch('/portfolio/' + id, { method: 'DELETE' }); loadPortfolio(); }
+  catch(e) { alert('Failed: ' + e.message); }
+}
+
+loadPortfolio();
+</script>
+</body>
+</html>
