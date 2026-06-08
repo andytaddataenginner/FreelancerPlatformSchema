@@ -9,13 +9,15 @@ router.get('/', requireFreelancer, async (req, res, next) => {
     const { rows } = await pool.query(`
       SELECT u.id, u.name, u.email, u.company,
              c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
+             c.fixed_payment_status,
              COUNT(t.id)::int AS log_count,
-             COALESCE(SUM(t.hours),0)::numeric AS total_hours
+             COALESCE(SUM(t.hours),0)::float AS total_hours
       FROM users u
       JOIN clients c ON c.user_id = u.id
       LEFT JOIN time_logs t ON t.client_id = u.id
       WHERE u.role = 'client'
-      GROUP BY u.id, u.name, u.email, u.company, c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price
+      GROUP BY u.id, u.name, u.email, u.company,
+               c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price, c.fixed_payment_status
       ORDER BY u.name
     `);
     res.json(rows);
@@ -27,17 +29,17 @@ router.post('/', requireFreelancer, async (req, res, next) => {
   try {
     const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
     if (!name || !email || !password) return res.status(400).json({ error: 'name, email, password required' });
-
     const hash = await bcrypt.hash(password, 10);
-
     await pool.query('BEGIN');
     try {
       const userRow = await pool.query(
-        'INSERT INTO users (name, email, password_hash, role, company) VALUES ($1,$2,$3,\'client\',$4) RETURNING id, name, email, company',
+        `INSERT INTO users (name, email, password_hash, role, company)
+         VALUES ($1,$2,$3,'client',$4) RETURNING id, name, email, company`,
         [name, email.toLowerCase().trim(), hash, company || null]
       );
       await pool.query(
-        'INSERT INTO clients (user_id, notes, rate_type, hourly_rate, fixed_price) VALUES ($1,$2,$3,$4,$5)',
+        `INSERT INTO clients (user_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status)
+         VALUES ($1,$2,$3,$4,$5,'unpaid')`,
         [userRow.rows[0].id, notes || null, rate_type || 'hourly', hourly_rate || null, fixed_price || null]
       );
       await pool.query('COMMIT');
@@ -55,12 +57,28 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
   try {
     const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
     await pool.query(
-      'UPDATE users SET name=$1, company=$2, updated_at=NOW() WHERE id=$3 AND role=\'client\'',
+      `UPDATE users SET name=$1, company=$2, updated_at=NOW()
+       WHERE id=$3 AND role='client'`,
       [name, company, req.params.id]
     );
     await pool.query(
-      'UPDATE clients SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5 WHERE user_id=$6',
+      `UPDATE clients SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5
+       WHERE user_id=$6`,
       [notes, is_active ?? true, rate_type || 'hourly', hourly_rate || null, fixed_price || null, req.params.id]
+    );
+    res.json({ message: 'Updated' });
+  } catch (e) { next(e); }
+});
+
+// PATCH /api/clients/:id/fixed-payment — mark fixed client as paid or unpaid
+router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => {
+  try {
+    const { fixed_payment_status } = req.body;
+    if (!['paid','unpaid'].includes(fixed_payment_status))
+      return res.status(400).json({ error: 'fixed_payment_status must be paid or unpaid' });
+    await pool.query(
+      `UPDATE clients SET fixed_payment_status=$1 WHERE user_id=$2`,
+      [fixed_payment_status, req.params.id]
     );
     res.json({ message: 'Updated' });
   } catch (e) { next(e); }
@@ -69,7 +87,7 @@ router.put('/:id', requireFreelancer, async (req, res, next) => {
 // DELETE /api/clients/:id
 router.delete('/:id', requireFreelancer, async (req, res, next) => {
   try {
-    await pool.query('DELETE FROM users WHERE id=$1 AND role=\'client\'', [req.params.id]);
+    await pool.query(`DELETE FROM users WHERE id=$1 AND role='client'`, [req.params.id]);
     res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
 });
