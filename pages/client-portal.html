@@ -3,44 +3,67 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Portal — YourName</title>
+  <title>My Portal — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
 </head>
 <body>
 <div class="dashboard">
   <aside class="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem"><div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0"><img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/></div><div style="line-height:1.2"><div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div><div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div></div></div>
+    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem">
+      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
     <nav class="sidebar-nav">
       <a href="client-portal.html" class="active">📊 My Overview</a>
+      <a href="client-logs.html">⏱ My Time Logs</a>
       <a href="client-schedule.html">📅 Book a Session</a>
       <a href="../index.html" target="_blank">🌐 Portfolio</a>
     </nav>
     <div class="sidebar-user">
       <strong id="user-name">Loading…</strong>
-      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.8rem"></span>
-      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+      <span id="user-company" style="display:block;margin-top:0.1rem;font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
+      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out →</a>
     </div>
   </aside>
 
   <main class="main-content">
     <h2 class="page-title">My Project Portal</h2>
-    <p class="page-sub">Track your hours, payment status, and book sessions.</p>
+    <p class="page-sub">Track your project, payment status, and book sessions.</p>
 
-    <!-- Summary stats -->
+    <!-- Fixed rate notice (shown only for fixed clients) -->
+    <div id="fixed-notice" style="display:none;margin-bottom:1.5rem">
+      <div style="background:linear-gradient(135deg,#0d2353,#1a3a7a);border-radius:16px;padding:1.8rem;color:white;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5c842;font-weight:700;margin-bottom:0.4rem">Fixed Price Project</div>
+          <div style="font-size:2rem;font-weight:700;font-family:'Playfair Display',serif" id="fixed-price-display">$0.00</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:0.2rem">Total project fee</div>
+        </div>
+        <div id="fixed-status-display" style="text-align:right">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
     <div class="stats-row">
-      <div class="stat-card" style="border-left:4px solid #1a6640">
-        <span class="stat-num" id="s-paid" style="color:#1a6640">$—</span>
+      <div class="stat-card" style="border-left:4px solid #22c55e">
+        <span class="stat-num" id="s-paid" style="color:#166534">$—</span>
         <span class="stat-label">Total paid</span>
       </div>
-      <div class="stat-card" style="border-left:4px solid #92400e">
+      <div class="stat-card" style="border-left:4px solid #f59e0b">
         <span class="stat-num" id="s-unpaid" style="color:#92400e">$—</span>
         <span class="stat-label">Outstanding balance</span>
       </div>
       <div class="stat-card">
         <span class="stat-num" id="s-hours">—</span>
-        <span class="stat-label">Total hours</span>
+        <span class="stat-label">Total hours logged</span>
       </div>
       <div class="stat-card">
         <span class="stat-num" id="s-bookings">—</span>
@@ -48,83 +71,105 @@
       </div>
     </div>
 
-    <!-- Payment filter tabs -->
-    <div style="display:flex;gap:0.6rem;margin-bottom:1rem">
-      <button class="btn-sm btn-outline active-tab" id="tab-all"    onclick="switchTab('all')"   >All logs</button>
-      <button class="btn-sm btn-outline"             id="tab-unpaid" onclick="switchTab('unpaid')">⚠ Unpaid</button>
-      <button class="btn-sm btn-outline"             id="tab-paid"   onclick="switchTab('paid')"  >✓ Paid</button>
+    <!-- Hourly logs section (shown only for hourly clients) -->
+    <div id="hourly-section">
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:0.6rem;margin-bottom:1rem">
+        <button id="tab-all"    onclick="switchTab('all')"    style="padding:0.5rem 1.2rem;border-radius:6px;border:none;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;background:var(--ink);color:white">All</button>
+        <button id="tab-unpaid" onclick="switchTab('unpaid')" style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">⚠ Unpaid</button>
+        <button id="tab-paid"   onclick="switchTab('paid')"   style="padding:0.5rem 1.2rem;border-radius:6px;border:1.5px solid var(--paper3);background:transparent;cursor:pointer;font-family:var(--sans);font-size:0.85rem;font-weight:600;color:var(--ink2)">✓ Paid</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 id="logs-title">All Work Logs</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Hours</th><th>Amount</th><th>Status</th><th>Task</th></tr>
+            </thead>
+            <tbody id="logs-table">
+              <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="logs-footer" style="padding:1rem;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2)"></div>
+      </div>
     </div>
 
-    <!-- Logs table -->
-    <div class="card">
-      <div class="card-header">
-        <h3 id="logs-title">All Work Logs</h3>
+    <!-- Fixed client — no logs message -->
+    <div id="fixed-section" style="display:none">
+      <div class="card">
+        <div class="card-header"><h3>📋 Project Details</h3></div>
+        <div style="padding:2rem;text-align:center;color:var(--ink2)">
+          <div style="font-size:3rem;margin-bottom:1rem">📦</div>
+          <div style="font-weight:600;margin-bottom:0.5rem">Fixed Price Project</div>
+          <div style="font-size:0.9rem;color:var(--ink3)">Your project is billed at a fixed rate.<br/>No hourly logs are tracked for this engagement.</div>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task Description</th></tr>
-          </thead>
-          <tbody id="logs-table">
-            <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--ink3)">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div id="logs-summary" style="padding:1rem 1rem 0;font-size:0.85rem;color:var(--ink2);border-top:1px solid var(--paper2);margin-top:0.5rem"></div>
     </div>
 
     <!-- Book session -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>📅 Book a Session</h3></div>
-      <p style="color:var(--ink2);font-size:0.9rem;margin-bottom:1.4rem">Request a meeting. I'll confirm within 24 hours.</p>
-      <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-        <div class="form-group">
-          <label>Preferred date</label>
-          <input type="date" name="date" id="book-date" required/>
-        </div>
-        <div class="form-group">
-          <label>Preferred time</label>
-          <select name="time" required>
-            <option value="">Select time…</option>
-            <option>09:00</option><option>10:00</option><option>11:00</option>
-            <option>13:00</option><option>14:00</option><option>15:00</option><option>16:00</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Session type</label>
-          <select name="type" required>
-            <option value="">Select…</option>
-            <option value="call">Video call</option>
-            <option value="review">Project review</option>
-            <option value="workshop">Working session</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Duration</label>
-          <select name="duration" required>
-            <option value="0.5">30 minutes</option>
-            <option value="1" selected>1 hour</option>
-            <option value="1.5">1.5 hours</option>
-            <option value="2">2 hours</option>
-          </select>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Message / agenda</label>
-          <textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea>
-        </div>
-        <div style="grid-column:1/-1">
-          <button type="submit" class="btn-primary">Request session →</button>
-          <div id="book-status" class="form-status" style="margin-top:0.5rem"></div>
-        </div>
-      </form>
+      <div style="padding:1.5rem">
+        <p style="color:var(--ink2);font-size:0.9rem;margin-bottom:1.4rem">Request a meeting or working session. I'll confirm within 24 hours.</p>
+        <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <div class="form-group">
+            <label>Preferred date</label>
+            <input type="date" name="date" id="book-date" required/>
+          </div>
+          <div class="form-group">
+            <label>Preferred time</label>
+            <select name="time" required>
+              <option value="">Select time…</option>
+              <option value="09:00">9:00 AM</option>
+              <option value="10:00">10:00 AM</option>
+              <option value="11:00">11:00 AM</option>
+              <option value="13:00">1:00 PM</option>
+              <option value="14:00">2:00 PM</option>
+              <option value="15:00">3:00 PM</option>
+              <option value="16:00">4:00 PM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Session type</label>
+            <select name="type" required>
+              <option value="">Select…</option>
+              <option value="call">Video call</option>
+              <option value="review">Project review</option>
+              <option value="workshop">Working session</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration</label>
+            <select name="duration">
+              <option value="0.5">30 minutes</option>
+              <option value="1" selected>1 hour</option>
+              <option value="1.5">1.5 hours</option>
+              <option value="2">2 hours</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1">
+            <label>Message / agenda</label>
+            <textarea name="message" rows="2" placeholder="What would you like to discuss?"></textarea>
+          </div>
+          <div style="grid-column:1/-1">
+            <button type="submit" class="btn-primary">Request session →</button>
+            <div id="book-status" class="form-status" style="margin-top:0.5rem"></div>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Upcoming bookings -->
     <div class="card" style="margin-top:1.5rem">
       <div class="card-header"><h3>Upcoming Sessions</h3></div>
-      <div id="upcoming-sessions"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
+      <div id="upcoming-sessions" style="padding:1rem"><p style="color:var(--ink3);font-size:0.9rem">Loading…</p></div>
     </div>
+
   </main>
 </div>
 
@@ -149,52 +194,12 @@ async function apiFetch(path, options = {}) {
   if (u && u.role !== 'client') { window.location.href = 'dashboard.html'; return; }
   document.getElementById('user-name').textContent = u ? u.name : '';
   if (u && u.company) document.getElementById('user-company').textContent = u.company;
+  document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
-document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
-let currentTab = 'all';
 let allLogs = [];
-
-function switchTab(tab) {
-  currentTab = tab;
-  ['all','unpaid','paid'].forEach(t => {
-    document.getElementById('tab-'+t).style.background = t===tab ? 'var(--ink)' : '';
-    document.getElementById('tab-'+t).style.color      = t===tab ? 'white' : '';
-  });
-  const titles = { all: 'All Work Logs', unpaid: '⚠ Unpaid Logs', paid: '✓ Paid Logs' };
-  document.getElementById('logs-title').textContent = titles[tab];
-  renderLogs(tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab));
-}
-
-function renderLogs(logs) {
-  const tbody = document.getElementById('logs-table');
-  const summary = document.getElementById('logs-summary');
-  if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--ink3)">No ${currentTab === 'all' ? '' : currentTab} logs found.</td></tr>`;
-    summary.textContent = '';
-    return;
-  }
-  let sumHours=0, sumAmount=0;
-  tbody.innerHTML = logs.map(l => {
-    const isPaid = l.payment_status === 'paid';
-    const amount = parseFloat(l.amount||0);
-    sumHours  += parseFloat(l.hours||0);
-    sumAmount += amount;
-    const badge = isPaid
-      ? '<span class="badge badge-green">✓ Paid</span>'
-      : '<span class="badge badge-amber">⚠ Unpaid</span>';
-    return `
-      <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
-        <td>${new Date(l.date).toLocaleDateString()}</td>
-        <td>${l.hours}h</td>
-        <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
-        <td>${badge}</td>
-        <td>${l.task_description}</td>
-      </tr>`;
-  }).join('');
-  summary.innerHTML = `<strong>${logs.length}</strong> entries · <strong>${sumHours.toFixed(1)}h</strong> total · <strong>$${sumAmount.toFixed(2)}</strong> total`;
-}
+let currentTab = 'all';
 
 async function loadPortal() {
   try {
@@ -204,43 +209,126 @@ async function loadPortal() {
       apiFetch('/client/bookings')
     ]);
 
-    document.getElementById('s-paid').textContent    = '$' + parseFloat(stats.totalPaid||0).toFixed(2);
-    document.getElementById('s-unpaid').textContent  = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
-    document.getElementById('s-hours').textContent   = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
-    document.getElementById('s-bookings').textContent = bookings.filter(b=>new Date(b.date)>=new Date()&&b.status!=='cancelled').length;
+    const isFixed = stats.rateType === 'fixed';
 
-    allLogs = logs;
-    switchTab('all');
+    // Stats cards
+    document.getElementById('s-paid').textContent   = '$' + parseFloat(stats.totalPaid  ||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent = '$' + parseFloat(stats.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-hours').textContent  = parseFloat(stats.totalHours||0).toFixed(1) + 'h';
 
-    const upcoming = document.getElementById('upcoming-sessions');
-    const future = bookings.filter(b => new Date(b.date) >= new Date() && b.status !== 'cancelled');
-    if (!future.length) {
-      upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions. Book one below!</p>';
+    const futureBookings = bookings.filter(b => new Date(b.date) >= new Date() && b.status !== 'cancelled');
+    document.getElementById('s-bookings').textContent = futureBookings.length;
+
+    if (isFixed) {
+      // Show fixed rate banner
+      document.getElementById('fixed-notice').style.display = 'block';
+      document.getElementById('fixed-section').style.display = 'block';
+      document.getElementById('hourly-section').style.display = 'none';
+      document.getElementById('fixed-price-display').textContent = '$' + parseFloat(stats.fixedPrice||0).toFixed(2);
+
+      const isPaid = stats.fixedStatus === 'paid';
+      document.getElementById('fixed-status-display').innerHTML = isPaid
+        ? `<div style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:10px;padding:0.8rem 1.2rem">
+             <div style="color:#86efac;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div>
+             <div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">✅ Paid</div>
+           </div>`
+        : `<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:0.8rem 1.2rem">
+             <div style="color:#fcd34d;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">Payment Status</div>
+             <div style="color:white;font-size:1.1rem;font-weight:700;margin-top:0.2rem">⏳ Payment Pending</div>
+             <div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-top:0.3rem">Please complete your payment</div>
+           </div>`;
     } else {
-      upcoming.innerHTML = future.map(b => `
+      // Hourly client — show logs
+      document.getElementById('fixed-notice').style.display = 'none';
+      document.getElementById('fixed-section').style.display = 'none';
+      document.getElementById('hourly-section').style.display = 'block';
+      allLogs = logs;
+      renderLogs(allLogs);
+    }
+
+    // Upcoming bookings
+    const upcoming = document.getElementById('upcoming-sessions');
+    if (!futureBookings.length) {
+      upcoming.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No upcoming sessions.</p>';
+    } else {
+      upcoming.innerHTML = futureBookings.map(b => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 0;border-bottom:1px solid var(--paper2)">
           <div>
-            <div style="font-weight:500;font-size:0.92rem">${b.type_label||b.type}</div>
+            <div style="font-weight:600;font-size:0.92rem">${b.type_label||b.type}</div>
             <div style="color:var(--ink2);font-size:0.82rem">${new Date(b.date).toLocaleDateString()} at ${b.time} · ${b.duration}h</div>
             ${b.message?`<div style="color:var(--ink3);font-size:0.8rem;margin-top:0.2rem">${b.message}</div>`:''}
           </div>
           <span class="badge ${b.status==='confirmed'?'badge-green':b.status==='pending'?'badge-amber':'badge-gray'}">${b.status}</span>
         </div>`).join('');
     }
+
   } catch(e) { console.error(e); }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  ['all','unpaid','paid'].forEach(t => {
+    const btn = document.getElementById('tab-'+t);
+    btn.style.background = t===tab ? 'var(--ink)' : 'transparent';
+    btn.style.color      = t===tab ? 'white'      : 'var(--ink2)';
+    btn.style.border     = t===tab ? 'none'        : '1.5px solid var(--paper3)';
+  });
+  const titles = { all:'All Work Logs', unpaid:'⚠ Unpaid Logs', paid:'✓ Paid Logs' };
+  document.getElementById('logs-title').textContent = titles[tab];
+  const filtered = tab === 'all' ? allLogs : allLogs.filter(l => l.payment_status === tab);
+  renderLogs(filtered);
+}
+
+function renderLogs(logs) {
+  const tbody  = document.getElementById('logs-table');
+  const footer = document.getElementById('logs-footer');
+  if (!logs.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--ink3)">${
+      currentTab==='unpaid' ? 'No unpaid logs — all settled! ✓' :
+      currentTab==='paid'   ? 'No paid logs yet.' : 'No logs found.'
+    }</td></tr>`;
+    footer.textContent = '';
+    return;
+  }
+  let sumHours=0, sumAmount=0;
+  tbody.innerHTML = logs.map(l => {
+    const isPaid  = l.payment_status === 'paid';
+    const amount  = parseFloat(l.amount||0);
+    sumHours  += parseFloat(l.hours||0);
+    sumAmount += amount;
+    const badge = isPaid
+      ? '<span class="badge badge-green">✓ Paid</span>'
+      : '<span class="badge badge-amber">⚠ Unpaid</span>';
+    return `
+      <tr style="${!isPaid?'background:rgba(255,200,100,0.04)':''}">
+        <td>${new Date(l.date).toLocaleDateString()}</td>
+        <td><strong>${l.hours}h</strong></td>
+        <td>${amount>0?'<strong>$'+amount.toFixed(2)+'</strong>':'—'}</td>
+        <td>${badge}</td>
+        <td>${l.task_description}</td>
+      </tr>`;
+  }).join('');
+  footer.innerHTML = `<strong>${logs.length}</strong> entries &nbsp;·&nbsp; <strong>${sumHours.toFixed(1)}h</strong> &nbsp;·&nbsp; <strong>$${sumAmount.toFixed(2)}</strong>`;
 }
 
 async function bookSession(e) {
   e.preventDefault();
   const status = document.getElementById('book-status');
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    await apiFetch('/client/bookings', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    await apiFetch('/client/bookings', { method:'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
     status.className = 'form-status success';
-    status.textContent = '✓ Request sent! I\'ll confirm shortly.';
+    status.textContent = '✓ Request sent! I\'ll confirm within 24 hours.';
     e.target.reset();
     document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
     loadPortal();
-  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+  } catch(err) {
+    status.className = 'form-status error';
+    status.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Request session →';
+  }
 }
 
 loadPortal();
