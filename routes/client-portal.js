@@ -11,20 +11,61 @@ router.get('/stats', requireClient, async (req, res, next) => {
     const now = new Date();
     const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
-    const [total, monthly, tasks, paid, unpaid] = await Promise.all([
-      pool.query('SELECT COALESCE(SUM(hours),0)::numeric AS h FROM time_logs WHERE client_id=$1', [clientId]),
-      pool.query('SELECT COALESCE(SUM(hours),0)::numeric AS h FROM time_logs WHERE client_id=$1 AND date >= $2', [clientId, firstOfMonth]),
-      pool.query('SELECT COUNT(*)::int AS cnt FROM time_logs WHERE client_id=$1', [clientId]),
-      pool.query("SELECT COALESCE(SUM(amount),0)::numeric AS total FROM time_logs WHERE client_id=$1 AND payment_status='paid'", [clientId]),
-      pool.query("SELECT COALESCE(SUM(amount),0)::numeric AS total FROM time_logs WHERE client_id=$1 AND payment_status='unpaid'", [clientId]),
-    ]);
+    // Get client billing info first
+    const clientInfo = await pool.query(
+      'SELECT rate_type, hourly_rate, fixed_price, fixed_payment_status FROM clients WHERE user_id=$1',
+      [clientId]
+    );
+    const c = clientInfo.rows[0] || {};
+    const isFixed = c.rate_type === 'fixed';
+
+    let totalPaid = 0, totalUnpaid = 0, totalHours = 0, totalTasks = 0, hoursThisMonth = 0;
+
+    if (isFixed) {
+      // Fixed client — amounts come from clients table directly
+      const price = parseFloat(c.fixed_price || 0);
+      if (c.fixed_payment_status === 'paid') {
+        totalPaid = price;
+      } else {
+        totalUnpaid = price;
+      }
+      // Still get hours from time_logs if any exist
+      const hrs = await pool.query(
+        'SELECT COALESCE(SUM(hours),0)::float AS h, COUNT(*)::int AS cnt FROM time_logs WHERE client_id=$1',
+        [clientId]
+      );
+      const hrsMonth = await pool.query(
+        'SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs WHERE client_id=$1 AND date >= $2',
+        [clientId, firstOfMonth]
+      );
+      totalHours     = hrs.rows[0].h;
+      totalTasks     = hrs.rows[0].cnt;
+      hoursThisMonth = hrsMonth.rows[0].h;
+    } else {
+      // Hourly client — amounts come from time_logs
+      const [total, monthly, tasks, paid, unpaid] = await Promise.all([
+        pool.query('SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs WHERE client_id=$1', [clientId]),
+        pool.query('SELECT COALESCE(SUM(hours),0)::float AS h FROM time_logs WHERE client_id=$1 AND date >= $2', [clientId, firstOfMonth]),
+        pool.query('SELECT COUNT(*)::int AS cnt FROM time_logs WHERE client_id=$1', [clientId]),
+        pool.query("SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE client_id=$1 AND payment_status='paid'", [clientId]),
+        pool.query("SELECT COALESCE(SUM(amount),0)::float AS total FROM time_logs WHERE client_id=$1 AND (payment_status='unpaid' OR payment_status IS NULL)", [clientId]),
+      ]);
+      totalHours     = total.rows[0].h;
+      hoursThisMonth = monthly.rows[0].h;
+      totalTasks     = tasks.rows[0].cnt;
+      totalPaid      = paid.rows[0].total;
+      totalUnpaid    = unpaid.rows[0].total;
+    }
 
     res.json({
-      totalHours:      total.rows[0].h,
-      hoursThisMonth:  monthly.rows[0].h,
-      totalTasks:      tasks.rows[0].cnt,
-      totalPaid:       paid.rows[0].total,
-      totalUnpaid:     unpaid.rows[0].total,
+      rateType:       c.rate_type || 'hourly',
+      fixedPrice:     c.fixed_price || 0,
+      fixedStatus:    c.fixed_payment_status || 'unpaid',
+      totalHours,
+      hoursThisMonth,
+      totalTasks,
+      totalPaid,
+      totalUnpaid,
     });
   } catch (e) { next(e); }
 });
@@ -72,7 +113,7 @@ router.post('/bookings', requireClient, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// DELETE /api/client/bookings/:id — client cancels
+// DELETE /api/client/bookings/:id
 router.delete('/bookings/:id', requireClient, async (req, res, next) => {
   try {
     await pool.query(
