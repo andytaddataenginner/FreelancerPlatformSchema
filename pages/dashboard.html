@@ -7,12 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    
-    /* FIX: Force scrollbar track to stay visible so viewport width doesn't shift */
-    html {
-      overflow-y: scroll;
-    }
-
     :root{
       --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
       --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
@@ -53,8 +47,7 @@
     .overlay.on{display:block}
 
     /* ── MAIN ── */
-    /* FIX: Prevent horizontal layout thrashing with overflow-x hidden */
-    .main{margin-left:240px;min-height:100vh;overflow-x:hidden;}
+    .main{margin-left:240px;min-height:100vh}
     .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
     .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
     .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
@@ -65,8 +58,7 @@
     .content{padding:1.5rem}
 
     /* ── STATS ── */
-    /* FIX: Swapped to an auto-fit layout to smoothly handle container scaling */
-    .stats-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:1rem;margin-bottom:1.5rem}
+    .stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;margin-bottom:1.5rem}
     .sc{background:#fff;border-radius:var(--r);padding:1.2rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s}
     .sc:hover{transform:translateY(-2px)}
     .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -137,6 +129,7 @@
 
     /* ── RESPONSIVE ── */
     @media(max-width:900px){
+      .stats-row{grid-template-columns:repeat(3,1fr)}
       .two-col{grid-template-columns:1fr}
     }
     @media(max-width:768px){
@@ -145,12 +138,14 @@
       .sidebar.open{transform:translateX(0);box-shadow:4px 0 32px rgba(0,0,0,.3)}
       .main{margin-left:0;padding-top:52px}
       .topbar{top:52px}
+      .stats-row{grid-template-columns:1fr 1fr;gap:.8rem}
       .two-col{grid-template-columns:1fr}
       .content{padding:1rem}
       .sc-num{font-size:1.4rem}
       .topbar-right{width:100%}
     }
     @media(max-width:420px){
+      .stats-row{grid-template-columns:1fr 1fr;gap:.6rem}
       .sc-num{font-size:1.2rem}
       .content{padding:.8rem}
     }
@@ -158,6 +153,7 @@
 </head>
 <body>
 
+<!-- Mobile top bar -->
 <div class="mob-bar">
   <div class="mob-brand">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -167,6 +163,7 @@
 </div>
 <div class="overlay" id="overlay" onclick="sbClose()"></div>
 
+<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -187,6 +184,7 @@
   </div>
 </aside>
 
+<!-- Main -->
 <div class="main">
   <div class="topbar">
     <div>
@@ -204,6 +202,7 @@
 
   <div class="content">
 
+    <!-- Stats -->
     <div class="stats-row">
       <div class="sc green"><div class="sc-icon">✅</div><div class="sc-label">Paid this month</div><span class="sc-num" id="s-paid">$0</span><div class="sc-sub">Received</div></div>
       <div class="sc amber"><div class="sc-icon">⏳</div><div class="sc-label">Unpaid this month</div><span class="sc-num" id="s-unpaid">$0</span><div class="sc-sub">Outstanding</div></div>
@@ -213,6 +212,7 @@
       <div class="sc navy"><div class="sc-icon">📅</div><div class="sc-label">Upcoming</div><span class="sc-num" id="s-book">0</span><div class="sc-sub">Bookings</div></div>
     </div>
 
+    <!-- Breakdown -->
     <div class="card">
       <div class="ch">
         <h3>💰 Payment Breakdown — <span id="bmonth"></span></h3>
@@ -220,4 +220,293 @@
       </div>
       <div class="tw">
         <table>
-          <thead><tr><th>Client</th><th>Type</th>
+          <thead><tr><th>Client</th><th>Type</th><th>Hours</th><th>Total</th><th>Paid</th><th>Unpaid</th><th>Status</th></tr></thead>
+          <tbody id="btable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Timer + Log -->
+    <div class="two-col">
+      <div class="card">
+        <div class="ch"><h3>⏱ Live Timer</h3></div>
+        <div class="cb">
+          <div class="fg"><label>Client</label><select id="tc"><option value="">Select client…</option></select></div>
+          <div class="fg"><label>Task</label><input type="text" id="tt" placeholder="What are you working on?"/></div>
+          <div class="timer-disp" id="tdisp">00:00:00</div>
+          <div class="timer-btns">
+            <button class="btn btn-g" id="tstart" onclick="startTimer()">▶ Start</button>
+            <button class="btn btn-r" id="tstop" onclick="stopTimer()" style="display:none">■ Stop & Save</button>
+            <button class="btn btn-o btn-sm" onclick="resetTimer()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><h3>✏️ Manual Log Entry</h3></div>
+        <div class="cb">
+          <form onsubmit="submitLog(event)">
+            <div class="fg"><label>Client</label><select name="client_id" id="mc" required><option value="">Select client…</option></select></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="fg"><label>Date</label><input type="date" name="date" id="ld" required/></div>
+              <div class="fg">
+                <label>Hours (any value)</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33 = 20min" required/>
+                <div class="hint">💡 20min=0.33 · 1h20m=1.33</div>
+              </div>
+            </div>
+            <div class="fg"><label>Task description</label><textarea name="task_description" rows="2" required placeholder="What did you work on?"></textarea></div>
+            <button type="submit" class="btn btn-p" style="width:100%">Add Log Entry</button>
+            <div id="ls" class="fs"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent logs -->
+    <div class="card">
+      <div class="ch">
+        <h3>Recent Logs</h3>
+        <a href="time-logs.html" style="font-size:.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Client</th><th>Date</th><th>Hours</th><th>Amount</th><th>Payment</th><th>Task</th><th>Actions</th></tr></thead>
+          <tbody id="rtable"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn btn-p" onclick="show('modal-client')">+ Add New Client</button>
+  </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-ov" id="modal-client">
+  <div class="modal">
+    <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
+    <form onsubmit="addClient(event)">
+      <div class="fg"><label>Full name</label><input type="text" name="name" required/></div>
+      <div class="fg"><label>Email</label><input type="email" name="email" required/></div>
+      <div class="fg"><label>Company (optional)</label><input type="text" name="company"/></div>
+      <div class="fg"><label>Temporary password</label><input type="text" name="password" required/></div>
+      <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:.5rem">
+        <div class="fg"><label>Rate type</label>
+          <select name="rate_type" id="art" onchange="toggleRate()">
+            <option value="hourly">Hourly rate</option>
+            <option value="fixed">Fixed price</option>
+          </select>
+        </div>
+        <div class="fg" id="ahr"><label>Hourly rate ($)</label><input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/></div>
+        <div class="fg" id="afp" style="display:none"><label>Fixed price ($)</label><input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/></div>
+      </div>
+      <button type="submit" class="btn btn-p" style="width:100%">Create client</button>
+      <div id="cs" class="fs"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Log Modal -->
+<div class="modal-ov" id="modal-edit">
+  <div class="modal">
+    <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
+    <div id="einfo" style="background:var(--bg);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="eid"/>
+    <input type="hidden" id="ehr"/>
+    <div class="fg"><label>Date</label><input type="date" id="edate" required/></div>
+    <div class="fg">
+      <label>Hours</label>
+      <input type="number" id="ehours" min="0.01" max="24" step="any" required oninput="previewAmt()"/>
+      <div class="hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</div>
+    </div>
+    <div id="aprev" style="background:#e8f0ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="fg"><label>Task description</label><textarea id="etask" rows="3" required></textarea></div>
+    <button class="btn btn-p" style="width:100%;padding:.8rem" onclick="saveEdit()">Save changes</button>
+    <div id="es" class="fs"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://freelancer-platform-9jut.onrender.com/api';
+const SH  = 8; // session hours
+
+const auth = {
+  token: () => localStorage.getItem('qfa_token'),
+  user:  () => { try{return JSON.parse(localStorage.getItem('qfa_user'))}catch{return null} },
+  save:  (t,u) => { localStorage.setItem('qfa_token',t); localStorage.setItem('qfa_user',JSON.stringify(u)); localStorage.setItem('qfa_lt',Date.now()); },
+  clear: () => { ['qfa_token','qfa_user','qfa_lt'].forEach(k=>localStorage.removeItem(k)); },
+  ok: () => {
+    if(!localStorage.getItem('qfa_token')) return false;
+    if((Date.now()-parseInt(localStorage.getItem('qfa_lt')||0))/(3600000)>SH){auth.clear();return false;}
+    return true;
+  },
+  hdrs: () => ({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('qfa_token')})
+};
+
+async function api(path,opts={}){
+  const r = await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
+  if(r.status===401){auth.clear();go('login.html');return;}
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
+  return r.json();
+}
+
+// ── Init ──────────────────────────────────────────────────────
+(function(){
+  if(!auth.ok()){go('login.html');return;}
+  const u=auth.user();
+  if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
+  document.getElementById('uname').textContent=u?u.name:'';
+  const h=new Date().getHours();
+  document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
+  document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
+  document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+})();
+
+function go(p){window.location.href=p;}
+function logout(){auth.clear();go('login.html');}
+function show(id){document.getElementById(id).classList.add('on');}
+function hide(id){document.getElementById(id).classList.remove('on');}
+function sbOpen(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('on');document.body.style.overflow='hidden';}
+function sbClose(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('on');document.body.style.overflow='';}
+function toggleRate(){
+  const t=document.getElementById('art').value;
+  document.getElementById('ahr').style.display=t==='hourly'?'flex':'none';
+  document.getElementById('afp').style.display=t==='fixed'?'flex':'none';
+}
+function fmtH(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);if(hr===0)return mn+'min';if(mn===0)return hr+'h';return hr+'h '+mn+'min';}
+
+// close sidebar on nav link tap (mobile)
+document.querySelectorAll('.sb-nav a').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();}));
+
+// ── Load dashboard ────────────────────────────────────────────
+async function load(){
+  const mo=document.getElementById('mpicker').value;
+  const ml=new Date(mo+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('bmonth').textContent=ml;
+  document.getElementById('ptitle').textContent='Overview — '+ml;
+  try{
+    const [st,cl,lg]=await Promise.all([
+      api('/stats/freelancer?month='+mo),
+      api('/clients'),
+      api('/timelogs?limit=8')
+    ]);
+    document.getElementById('s-paid').textContent='$'+parseFloat(st.totalEarned||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent='$'+parseFloat(st.totalUnpaid||0).toFixed(2);
+    document.getElementById('s-exp').textContent='$'+parseFloat(st.totalExpected||0).toFixed(2);
+    document.getElementById('s-clients').textContent=st.clientsThisMonth||0;
+    document.getElementById('s-hours').textContent=fmtH(parseFloat(st.hoursThisMonth||0));
+    document.getElementById('s-book').textContent=st.upcomingBookings||0;
+
+    // Breakdown
+    const bt=document.getElementById('btable');
+    if(!st.clientBreakdown||!st.clientBreakdown.length){
+      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+    }else{
+      bt.innerHTML=st.clientBreakdown.map(c=>{
+        const ap=parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
+        const badge=ap?'<span class="badge bg-g">All paid ✓</span>':parseFloat(c.paid)>0?'<span class="badge bg-a">Partial</span>':'<span class="badge" style="background:var(--bg2);color:var(--ink3)">Unpaid</span>';
+        const rt=c.rate_type==='fixed'?'<span class="badge bg-b">Fixed</span>':'<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
+        return`<tr><td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td><td>${rt}</td><td>${fmtH(parseFloat(c.hours))}</td><td><strong>$${parseFloat(c.total).toFixed(2)}</strong></td><td style="color:var(--green)">$${parseFloat(c.paid).toFixed(2)}</td><td style="color:var(--amber)">$${parseFloat(c.unpaid).toFixed(2)}</td><td>${badge}</td></tr>`;
+      }).join('');
+    }
+
+    // Dropdowns
+    const opts=cl.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    document.getElementById('tc').innerHTML='<option value="">Select client…</option>'+opts;
+    document.getElementById('mc').innerHTML='<option value="">Select client…</option>'+opts;
+
+    // Recent logs
+    const rt=document.getElementById('rtable');
+    if(!lg.length){
+      rt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
+    }else{
+      rt.innerHTML=lg.map(l=>{
+        const ip=l.payment_status==='paid';
+        const badge=ip?'<span class="badge bg-g">✓ Paid</span>':'<span class="badge bg-a">Unpaid</span>';
+        const pb=ip?`<button class="btn btn-o btn-sm" onclick="pay(${l.id},'unpaid')">Undo</button>`:`<button class="btn btn-g btn-sm" onclick="pay(${l.id},'paid')">Mark paid</button>`;
+        const cl2=cl.find(c=>c.id===l.client_id)||{};
+        return`<tr><td><strong>${l.client_name}</strong></td><td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td><td>${fmtH(parseFloat(l.hours))}</td><td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td><td>${badge}</td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td><td style="display:flex;gap:.3rem;flex-wrap:wrap">${pb}<button class="btn btn-o btn-sm" onclick="openEdit(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}',${cl2.hourly_rate||0})">✏️</button></td></tr>`;
+      }).join('');
+    }
+  }catch(e){console.error(e);}
+}
+
+async function pay(id,s){try{await api('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:s})});load();}catch(e){alert(e.message);}}
+
+// ── Edit log ─────────────────────────────────────────────────
+function openEdit(id,date,hours,task,hr){
+  document.getElementById('eid').value=id;
+  document.getElementById('ehr').value=hr;
+  document.getElementById('edate').value=date.slice(0,10);
+  document.getElementById('ehours').value=hours;
+  document.getElementById('etask').value=task;
+  document.getElementById('es').textContent='';
+  document.getElementById('einfo').textContent=hr>0?`Hourly rate: $${hr}/hr`:'Calculating…';
+  previewAmt();
+  show('modal-edit');
+}
+function previewAmt(){
+  const h=parseFloat(document.getElementById('ehours').value||0);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const p=document.getElementById('aprev');
+  if(h>0&&hr>0){p.textContent='💰 New amount: $'+(h*hr).toFixed(2)+' ('+fmtH(h)+' × $'+hr+'/hr)';p.style.display='block';}
+  else p.style.display='none';
+}
+async function saveEdit(){
+  const s=document.getElementById('es');
+  const id=document.getElementById('eid').value;
+  const hours=parseFloat(document.getElementById('ehours').value);
+  const hr=parseFloat(document.getElementById('ehr').value||0);
+  const amount=hr>0?(hours*hr).toFixed(2):undefined;
+  try{
+    await api('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:document.getElementById('etask').value,date:document.getElementById('edate').value,amount})});
+    s.className='fs ok';s.textContent='✓ Updated!';
+    setTimeout(()=>{hide('modal-edit');load();},700);
+  }catch(e){s.className='fs er';s.textContent=e.message;}
+}
+
+// ── Timer ─────────────────────────────────────────────────────
+let tiv=null,ts=0,tr=false;
+function tdsp(){const h=Math.floor(ts/3600).toString().padStart(2,'0'),m=Math.floor((ts%3600)/60).toString().padStart(2,'0'),s=(ts%60).toString().padStart(2,'0');document.getElementById('tdisp').textContent=`${h}:${m}:${s}`;}
+function startTimer(){if(tr)return;tr=true;tiv=setInterval(()=>{ts++;tdsp();},1000);document.getElementById('tstart').style.display='none';document.getElementById('tstop').style.display='inline-flex';}
+async function stopTimer(){
+  if(!tr)return;clearInterval(tiv);tr=false;
+  const hours=Math.round(ts/3600*100)/100;
+  const cid=document.getElementById('tc').value;
+  const task=document.getElementById('tt').value;
+  if(!cid){alert('Select a client first.');startTimer();return;}
+  if(hours<0.01){alert('Too short to log.');resetTimer();return;}
+  try{await api('/timelogs',{method:'POST',body:JSON.stringify({client_id:cid,hours,task_description:task||'Timed session',date:new Date().toISOString().slice(0,10),source:'timer'})});alert('✓ Logged '+fmtH(hours));resetTimer();load();}
+  catch(e){alert('Failed: '+e.message);}
+  document.getElementById('tstart').style.display='inline-flex';
+  document.getElementById('tstop').style.display='none';
+}
+function resetTimer(){clearInterval(tiv);tr=false;ts=0;tdsp();document.getElementById('tstart').style.display='inline-flex';document.getElementById('tstop').style.display='none';}
+
+// ── Manual log ────────────────────────────────────────────────
+async function submitLog(e){
+  e.preventDefault();
+  const st=document.getElementById('ls');
+  try{
+    await api('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
+    st.className='fs ok';st.textContent='✓ Log saved!';
+    e.target.reset();document.getElementById('ld').value=new Date().toISOString().slice(0,10);
+    load();setTimeout(()=>st.textContent='',3000);
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+// ── Add client ────────────────────────────────────────────────
+async function addClient(e){
+  e.preventDefault();
+  const st=document.getElementById('cs');
+  try{
+    await api('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+    st.className='fs ok';st.textContent='✓ Client created!';
+    e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
+  }catch(e){st.className='fs er';st.textContent=e.message;}
+}
+
+load();
+</script>
+</body>
+</html>
