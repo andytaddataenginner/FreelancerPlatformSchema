@@ -2,230 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
   <title>Dashboard — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --navy: #0d2353; --navy2: #1a3a7a; --accent: #1a5cff;
-      --gold: #c9952a; --gold2: #f5c842;
-      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
-      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
-      --green: #166534; --green-bg: #dcfce7;
-      --amber: #92400e; --amber-bg: #fef3c7;
-      --red-bg: #fee2e2; --red: #b91c1c;
-      --serif: 'Playfair Display', Georgia, serif;
-      --sans: 'Outfit', system-ui, sans-serif;
-      --radius: 16px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
-    }
-    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: 260px; background: var(--navy); position: fixed;
-      top: 0; left: 0; height: 100vh; display: flex; flex-direction: column;
-      z-index: 50; box-shadow: 4px 0 24px rgba(13,35,83,0.15);
-    }
-    .sidebar-brand {
-      padding: 1.4rem 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 0.7rem;
-    }
-    .brand-logo {
-      width: 40px; height: 40px; background: var(--white);
-      border-radius: 10px; overflow: hidden; flex-shrink: 0; padding: 3px;
-    }
-    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .brand-text strong { display: block; color: var(--white); font-size: 0.82rem; font-weight: 700; line-height: 1.2; }
-    .brand-text span { font-size: 0.68rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
-
-    .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
-    .sidebar-nav a {
-      display: flex; align-items: center; gap: 0.8rem;
-      padding: 0.75rem 1.5rem; font-size: 0.88rem; font-weight: 500;
-      color: rgba(255,255,255,0.55); text-decoration: none;
-      transition: all 0.2s; border-right: 3px solid transparent;
-    }
-    .sidebar-nav a:hover { color: var(--white); background: rgba(255,255,255,0.06); }
-    .sidebar-nav a.active { color: var(--white); background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
-    .sidebar-nav .nav-icon { font-size: 1.1rem; width: 24px; text-align: center; }
-
-    .sidebar-user {
-      padding: 1.2rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-    .sidebar-user strong { display: block; color: var(--white); font-size: 0.9rem; margin-bottom: 0.2rem; }
-    .sidebar-user span { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
-    .sidebar-user a { display: inline-block; margin-top: 0.5rem; font-size: 0.78rem; color: var(--gold2); text-decoration: none; }
-
-    /* ── MAIN ── */
-    .main { margin-left: 260px; min-height: 100vh; }
-
-    /* Top bar */
-    .topbar {
-      background: var(--white); border-bottom: 1px solid rgba(13,35,83,0.08);
-      padding: 1rem 2rem; display: flex; align-items: center;
-      justify-content: space-between; position: sticky; top: 0; z-index: 40;
-      box-shadow: 0 2px 12px rgba(13,35,83,0.06);
-    }
-    .topbar-left h2 { font-family: var(--serif); font-size: 1.5rem; letter-spacing: -0.02em; }
-    .topbar-left p { font-size: 0.82rem; color: var(--ink3); margin-top: 0.1rem; }
-    .topbar-right { display: flex; align-items: center; gap: 1rem; }
-    .month-picker-wrap { display: flex; align-items: center; gap: 0.6rem; }
-    .month-picker-wrap label { font-size: 0.8rem; font-weight: 600; color: var(--ink2); }
-    .month-picker-wrap input {
-      padding: 0.45rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.12);
-      border-radius: 8px; font-family: var(--sans); font-size: 0.85rem;
-      color: var(--navy); background: var(--bg);
-    }
-
-    /* ── CONTENT ── */
-    .content { padding: 2rem; }
-
-    /* ── STAT CARDS ── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.2rem; margin-bottom: 1.8rem;
-    }
-    .stat-card {
-      background: var(--white); border-radius: var(--radius);
-      padding: 1.4rem 1.6rem; box-shadow: var(--shadow);
-      border: 1px solid rgba(13,35,83,0.05);
-      position: relative; overflow: hidden; transition: transform 0.2s;
-    }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    }
-    .stat-card.green::before { background: linear-gradient(90deg, #22c55e, #86efac); }
-    .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
-    .stat-card.blue::before  { background: linear-gradient(90deg, var(--accent), #60a5fa); }
-    .stat-card.navy::before  { background: linear-gradient(90deg, var(--navy), var(--navy2)); }
-    .stat-card.gold::before  { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
-
-    .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); margin-bottom: 0.6rem; }
-    .stat-num { font-family: var(--serif); font-size: 2rem; font-weight: 700; line-height: 1; display: block; }
-    .stat-sub { font-size: 0.75rem; color: var(--ink3); margin-top: 0.3rem; }
-    .stat-icon { position: absolute; top: 1.2rem; right: 1.2rem; font-size: 1.5rem; opacity: 0.12; }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
-      margin-bottom: 1.5rem; overflow: hidden;
-    }
-    .card-header {
-      padding: 1.2rem 1.6rem; border-bottom: 1px solid var(--bg2);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .card-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
-    .card-body { padding: 1.6rem; }
-
-    /* ── GRID ── */
-    .two-col { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; align-items: start; }
-
-    /* ── FORM ── */
-    .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
-    .form-group label { font-size: 0.78rem; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.06em; }
-    input[type=text], input[type=number], input[type=date], input[type=email],
-    input[type=password], textarea, select {
-      width: 100%; padding: 0.75rem 1rem;
-      border: 1.5px solid rgba(13,35,83,0.1); border-radius: 10px;
-      background: var(--bg); font-family: var(--sans); font-size: 0.9rem;
-      color: var(--navy); transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input:focus, textarea:focus, select:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(26,92,255,0.1);
-    }
-
-    /* ── BUTTONS ── */
-    .btn { padding: 0.65rem 1.4rem; border-radius: 8px; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
-    .btn-primary { background: var(--navy); color: var(--white); }
-    .btn-primary:hover { background: var(--accent); transform: translateY(-1px); }
-    .btn-green  { background: var(--green-bg); color: var(--green); }
-    .btn-green:hover { background: var(--green); color: white; }
-    .btn-amber  { background: var(--amber-bg); color: var(--amber); }
-    .btn-red    { background: var(--red-bg); color: var(--red); }
-    .btn-red:hover { background: var(--red); color: white; }
-    .btn-outline { background: transparent; border: 1.5px solid rgba(13,35,83,0.15); color: var(--ink2); }
-    .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
-    .btn-sm { padding: 0.4rem 0.9rem; font-size: 0.78rem; }
-    .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: var(--white); }
-
-    /* ── TIMER ── */
-    .timer-display {
-      font-family: var(--serif); font-size: 3.2rem; text-align: center;
-      color: var(--navy); padding: 0.8rem 0; letter-spacing: 0.04em;
-      background: var(--bg); border-radius: 12px; margin: 0.8rem 0;
-    }
-    .timer-controls { display: flex; gap: 0.6rem; justify-content: center; }
-
-    /* ── TABLE ── */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    th { padding: 0.7rem 1rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink3); border-bottom: 2px solid var(--bg2); font-weight: 700; text-align: left; }
-    td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--bg2); color: var(--ink2); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--bg); }
-
-    /* ── BADGE ── */
-    .badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .badge-green { background: var(--green-bg); color: var(--green); }
-    .badge-amber { background: var(--amber-bg); color: var(--amber); }
-    .badge-blue  { background: #dbeafe; color: #1e40af; }
-    .badge-gray  { background: var(--bg2); color: var(--ink3); }
-
-    /* ── MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
-    .modal-overlay.open { display: flex; }
-    .modal { background: var(--white); border-radius: 20px; padding: 2rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(13,35,83,0.2); animation: modalIn 0.25s ease; }
-    @keyframes modalIn { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:none; } }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-    .modal-header h3 { font-family: var(--serif); font-size: 1.3rem; }
-    .modal-close { background: var(--bg); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; color: var(--ink3); }
-    .modal-close:hover { background: var(--red-bg); color: var(--red); }
-
-    .form-status { font-size: 0.82rem; margin-top: 0.4rem; }
-    .form-status.success { color: var(--green); }
-    .form-status.error   { color: var(--red); }
-
-    /* ── BREAKDOWN TABLE ── */
-    .breakdown-row { display: flex; align-items: center; padding: 0.85rem 0; border-bottom: 1px solid var(--bg2); gap: 1rem; }
-    .breakdown-row:last-child { border-bottom: none; }
-    .breakdown-name { flex: 1; font-weight: 600; font-size: 0.88rem; }
-    .breakdown-company { font-size: 0.74rem; color: var(--ink3); font-weight: 400; }
-    .breakdown-num { font-family: var(--serif); font-size: 1rem; font-weight: 700; min-width: 70px; text-align: right; }
-
-    @media (max-width: 900px) {
-      .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; }
-      .main { margin-left: 0; }
-      .two-col { grid-template-columns: 1fr; }
-    }
-  </style>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/mobile.css"/>
 </head>
 <body>
-<div style="display:flex">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+<div class="mobile-topbar">
+  <div class="mobile-topbar-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+
+<div class="mobile-topbar">
+  <div class="mobile-topbar-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <div class="mobile-topbar-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Dashboard</span>
+  </div>
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+</div>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
-      <div class="brand-text">
-        <strong>Quick Freelancing</strong>
-        <span>Agency · Dashboard</span>
-      </div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency · Dashboard</span></div>
     </div>
     <nav class="sidebar-nav">
-      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span> Overview</a>
-      <a href="time-logs.html"><span class="nav-icon">⏱</span> Time Logs</a>
-      <a href="clients.html"><span class="nav-icon">👥</span> Clients</a>
-      <a href="schedule.html"><span class="nav-icon">📅</span> Schedule</a>
-      <a href="portfolio-admin.html"><span class="nav-icon">🖼</span> Portfolio</a>
-      <a href="../index.html" target="_blank"><span class="nav-icon">🌐</span> Public Site</a>
+      <a href="dashboard.html" class="active">📊 Overview</a>
+      <a href="time-logs.html">⏱ Time Logs</a>
+      <a href="clients.html">👥 Clients</a>
+      <a href="schedule.html">📅 Schedule</a>
+      <a href="portfolio-admin.html">🖼 Portfolio</a>
+      <a href="../index.html" target="_blank">🌐 Public Site</a>
     </nav>
     <div class="sidebar-user">
       <strong id="user-name">Loading…</strong>
@@ -234,17 +62,15 @@
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- Main -->
   <div class="main">
-
-    <!-- TOPBAR -->
     <div class="topbar">
       <div class="topbar-left">
         <h2 id="page-title">Overview</h2>
         <p id="greeting">Good morning</p>
       </div>
       <div class="topbar-right">
-        <div class="month-picker-wrap">
+        <div class="month-wrap">
           <label>Month</label>
           <input type="month" id="month-picker" onchange="loadDashboard()"/>
         </div>
@@ -252,10 +78,8 @@
       </div>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
-
-      <!-- STAT CARDS -->
+      <!-- KPI cards -->
       <div class="stats-row">
         <div class="stat-card green">
           <div class="stat-icon">✅</div>
@@ -273,7 +97,7 @@
           <div class="stat-icon">💰</div>
           <div class="stat-label">Total expected</div>
           <span class="stat-num" id="s-expected">$0</span>
-          <div class="stat-sub" id="s-expected-sub">Hourly + Fixed</div>
+          <div class="stat-sub">Hourly + Fixed</div>
         </div>
         <div class="stat-card navy">
           <div class="stat-icon">👥</div>
@@ -295,11 +119,11 @@
         </div>
       </div>
 
-      <!-- Client payment breakdown -->
+      <!-- Payment breakdown -->
       <div class="card">
         <div class="card-header">
           <h3>💰 Payment Breakdown — <span id="breakdown-month"></span></h3>
-          <a href="time-logs.html" style="font-size:0.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
+          <a href="time-logs.html" style="font-size:0.78rem;color:var(--accent);text-decoration:none;font-weight:600">View all logs →</a>
         </div>
         <div class="table-wrap">
           <table>
@@ -313,7 +137,6 @@
 
       <!-- Timer + Manual log -->
       <div class="two-col">
-        <!-- Timer -->
         <div class="card">
           <div class="card-header"><h3>⏱ Live Timer</h3></div>
           <div class="card-body">
@@ -334,25 +157,22 @@
           </div>
         </div>
 
-        <!-- Manual log -->
         <div class="card">
           <div class="card-header"><h3>✏️ Manual Log Entry</h3></div>
           <div class="card-body">
             <form onsubmit="submitManualLog(event)">
               <div class="form-group">
                 <label>Client</label>
-                <select name="client_id" required id="manual-client"><option value="">Select client…</option></select>
+                <select name="client_id" id="manual-client" required><option value="">Select client…</option></select>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div class="form-group">
-                  <label>Date</label>
-                  <input type="date" name="date" required id="log-date"/>
-                </div>
-                <div class="form-group">
-                  <label>Hours spent (any value)</label>
-                  <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33 = 20min" required/>
-                  <span style="font-size:0.72rem;color:var(--ink3);margin-top:0.2rem">💡 20min = 0.33 · 45min = 0.75 · 1h30m = 1.5</span>
-                </div>
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="date" id="log-date" required/>
+              </div>
+              <div class="form-group">
+                <label>Hours spent</label>
+                <input type="number" name="hours" min="0.01" max="24" step="any" placeholder="e.g. 0.33 for 20min" required/>
+                <span class="form-hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</span>
               </div>
               <div class="form-group">
                 <label>Task description</label>
@@ -365,11 +185,11 @@
         </div>
       </div>
 
-      <!-- Recent logs with edit -->
+      <!-- Recent logs -->
       <div class="card">
         <div class="card-header">
           <h3>Recent Logs</h3>
-          <a href="time-logs.html" style="font-size:0.8rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
+          <a href="time-logs.html" style="font-size:0.78rem;color:var(--accent);text-decoration:none;font-weight:600">View all →</a>
         </div>
         <div class="table-wrap">
           <table>
@@ -381,6 +201,7 @@
         </div>
       </div>
 
+      <button class="btn btn-primary" onclick="document.getElementById('modal-client').classList.add('open')" style="margin-bottom:2rem">+ Add New Client</button>
     </div>
   </div>
 </div>
@@ -394,7 +215,7 @@
     </div>
     <form onsubmit="addClient(event)">
       <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
-      <div class="form-group"><label>Email address</label><input type="email" name="email" required/></div>
+      <div class="form-group"><label>Email</label><input type="email" name="email" required/></div>
       <div class="form-group"><label>Company (optional)</label><input type="text" name="company"/></div>
       <div class="form-group"><label>Temporary password</label><input type="text" name="password" required/></div>
       <div style="border-top:1px solid var(--bg2);padding-top:1rem;margin-top:0.5rem">
@@ -402,7 +223,7 @@
           <label>Rate type</label>
           <select name="rate_type" id="add-rate-type" onchange="toggleRate('add')">
             <option value="hourly">Hourly rate</option>
-            <option value="fixed">Fixed price project</option>
+            <option value="fixed">Fixed price</option>
           </select>
         </div>
         <div class="form-group" id="add-hourly">
@@ -410,7 +231,7 @@
           <input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/>
         </div>
         <div class="form-group" id="add-fixed" style="display:none">
-          <label>Fixed project price ($)</label>
+          <label>Fixed price ($)</label>
           <input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/>
         </div>
       </div>
@@ -427,24 +248,20 @@
       <h3>Edit Log Entry</h3>
       <button class="modal-close" onclick="document.getElementById('modal-edit-log').classList.remove('open')">✕</button>
     </div>
-    <form onsubmit="saveEditLog(event)">
-      <input type="hidden" id="edit-log-id"/>
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" id="edit-log-date" required/>
-      </div>
-      <div class="form-group">
-        <label>Hours spent (any value)</label>
-        <input type="number" id="edit-log-hours" min="0.01" max="24" step="any" required/>
-        <span style="font-size:0.72rem;color:var(--ink3);margin-top:0.2rem">💡 20min = 0.33 · 45min = 0.75 · 1h 20min = 1.33</span>
-      </div>
-      <div class="form-group">
-        <label>Task description</label>
-        <textarea id="edit-log-task" rows="3" required></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Save changes</button>
-      <div id="edit-log-status" class="form-status"></div>
-    </form>
+    <div id="edit-client-info" style="background:var(--bg);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1rem;font-size:0.82rem;color:var(--ink2)"></div>
+    <input type="hidden" id="edit-log-id"/>
+    <input type="hidden" id="edit-rate-type"/>
+    <input type="hidden" id="edit-hourly-rate"/>
+    <div class="form-group"><label>Date</label><input type="date" id="edit-log-date" required/></div>
+    <div class="form-group">
+      <label>Hours spent</label>
+      <input type="number" id="edit-log-hours" min="0.01" max="24" step="any" required oninput="previewEditAmount()"/>
+      <span class="form-hint">💡 20min=0.33 · 45min=0.75 · 1h20m=1.33</span>
+    </div>
+    <div id="edit-amount-preview" style="background:#e8f0ff;border-radius:8px;padding:0.6rem 1rem;margin-bottom:0.8rem;font-size:0.84rem;color:var(--accent);font-weight:600;display:none"></div>
+    <div class="form-group"><label>Task description</label><textarea id="edit-log-task" rows="3" required></textarea></div>
+    <button class="btn btn-primary" style="width:100%;padding:0.8rem" onclick="saveEditLog()">Save changes</button>
+    <div id="edit-log-status" class="form-status"></div>
   </div>
 </div>
 
@@ -464,6 +281,7 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
+// ── Auth guard ────────────────────────────────────────────
 (function() {
   if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
   const u = auth.user();
@@ -471,64 +289,68 @@ async function apiFetch(path, options = {}) {
   document.getElementById('user-name').textContent = u ? u.name : '';
   const h = new Date().getHours();
   document.getElementById('greeting').textContent =
-    h < 12 ? 'Good morning ☀️' : h < 17 ? 'Good afternoon 🌤' : 'Good evening 🌙';
+    h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
   document.getElementById('month-picker').value = new Date().toISOString().slice(0,7);
+  document.getElementById('log-date').value     = new Date().toISOString().slice(0,10);
 })();
 
-document.getElementById('log-date').value = new Date().toISOString().slice(0,10);
 function logout() { auth.clear(); window.location.href = 'login.html'; }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
 function toggleRate(p) {
   const t = document.getElementById(p+'-rate-type').value;
   document.getElementById(p+'-hourly').style.display = t==='hourly'?'flex':'none';
   document.getElementById(p+'-fixed').style.display  = t==='fixed' ?'flex':'none';
 }
-
-// ── Hours helper ─────────────────────────────────────────────
 function fmtHours(h) {
-  const hrs = Math.floor(h);
-  const mins = Math.round((h - hrs) * 60);
-  if (hrs === 0) return `${mins}min`;
-  if (mins === 0) return `${hrs}h`;
+  const hrs=Math.floor(h), mins=Math.round((h-hrs)*60);
+  if(hrs===0) return `${mins}min`;
+  if(mins===0) return `${hrs}h`;
   return `${hrs}h ${mins}min`;
 }
 
+// ── Dashboard data ────────────────────────────────────────
+let allClients = [];
+
 async function loadDashboard() {
   const month = document.getElementById('month-picker').value;
-  const monthLabel = new Date(month+'-02').toLocaleString('default',{month:'long',year:'numeric'});
-  document.getElementById('breakdown-month').textContent = monthLabel;
-  document.getElementById('page-title').textContent = 'Overview — ' + monthLabel;
+  const ml = new Date(month+'-02').toLocaleString('default',{month:'long',year:'numeric'});
+  document.getElementById('breakdown-month').textContent = ml;
+  document.getElementById('page-title').textContent = 'Overview — ' + ml;
 
   try {
     const [stats, clients, logs] = await Promise.all([
-      apiFetch('/stats/freelancer?month=' + month),
+      apiFetch('/stats/freelancer?month='+month),
       apiFetch('/clients'),
       apiFetch('/timelogs?limit=8')
     ]);
+    allClients = clients;
 
-    document.getElementById('s-earned').textContent   = '$' + parseFloat(stats.totalEarned  ||0).toFixed(2);
-    document.getElementById('s-unpaid').textContent   = '$' + parseFloat(stats.totalUnpaid  ||0).toFixed(2);
-    document.getElementById('s-expected').textContent = '$' + parseFloat(stats.totalExpected||0).toFixed(2);
-    document.getElementById('s-clients').textContent  = stats.clientsThisMonth || 0;
+    document.getElementById('s-earned').textContent   = '$'+parseFloat(stats.totalEarned  ||0).toFixed(2);
+    document.getElementById('s-unpaid').textContent   = '$'+parseFloat(stats.totalUnpaid  ||0).toFixed(2);
+    document.getElementById('s-expected').textContent = '$'+parseFloat(stats.totalExpected||0).toFixed(2);
+    document.getElementById('s-clients').textContent  = stats.clientsThisMonth||0;
     document.getElementById('s-hours').textContent    = fmtHours(parseFloat(stats.hoursThisMonth||0));
-    document.getElementById('s-bookings').textContent = stats.upcomingBookings || 0;
+    document.getElementById('s-bookings').textContent = stats.upcomingBookings||0;
 
-    // Breakdown table
-    const btbody = document.getElementById('breakdown-table');
-    if (!stats.clientBreakdown || !stats.clientBreakdown.length) {
-      btbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
+    // Breakdown
+    const bt = document.getElementById('breakdown-table');
+    if(!stats.clientBreakdown||!stats.clientBreakdown.length) {
+      bt.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No activity this month.</td></tr>';
     } else {
-      btbody.innerHTML = stats.clientBreakdown.map(c => {
-        const allPaid = parseFloat(c.unpaid)===0 && parseFloat(c.paid)>0;
+      bt.innerHTML = stats.clientBreakdown.map(c=>{
+        const allPaid = parseFloat(c.unpaid)===0&&parseFloat(c.paid)>0;
         const badge = allPaid
           ? '<span class="badge badge-green">All paid ✓</span>'
-          : parseFloat(c.paid)>0
-          ? '<span class="badge badge-amber">Partial</span>'
+          : parseFloat(c.paid)>0 ? '<span class="badge badge-amber">Partial</span>'
           : '<span class="badge badge-gray">Unpaid</span>';
-        const rateTag = c.rate_type === 'fixed'
+        const rateTag = c.rate_type==='fixed'
           ? '<span class="badge badge-blue">Fixed</span>'
           : '<span class="badge" style="background:#e8f0ff;color:var(--accent)">Hourly</span>';
         return `<tr>
-          <td><strong>${c.client_name}</strong>${c.company?`<br/><span style="font-size:0.75rem;color:var(--ink3)">${c.company}</span>`:''}</td>
+          <td><strong>${c.client_name}</strong>${c.company?`<br/><small style="color:var(--ink3)">${c.company}</small>`:''}</td>
           <td>${rateTag}</td>
           <td>${fmtHours(parseFloat(c.hours))}</td>
           <td><strong>$${parseFloat(c.total).toFixed(2)}</strong></td>
@@ -539,138 +361,124 @@ async function loadDashboard() {
       }).join('');
     }
 
-    // Client dropdowns
-    const opts = clients.map(c => `<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
-    document.getElementById('timer-client').innerHTML  = '<option value="">Select client…</option>' + opts;
-    document.getElementById('manual-client').innerHTML = '<option value="">Select client…</option>' + opts;
+    // Dropdowns
+    const opts = clients.map(c=>`<option value="${c.id}">${c.name}${c.company?' — '+c.company:''}</option>`).join('');
+    document.getElementById('timer-client').innerHTML  = '<option value="">Select client…</option>'+opts;
+    document.getElementById('manual-client').innerHTML = '<option value="">Select client…</option>'+opts;
 
     // Recent logs
-    const tbody = document.getElementById('recent-logs');
-    if (!logs.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
+    const tb = document.getElementById('recent-logs');
+    if(!logs.length) {
+      tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No logs yet.</td></tr>';
     } else {
-      tbody.innerHTML = logs.map(l => {
-        const isPaid = l.payment_status === 'paid';
-        const badge  = isPaid ? '<span class="badge badge-green">✓ Paid</span>' : '<span class="badge badge-amber">Unpaid</span>';
+      tb.innerHTML = logs.map(l=>{
+        const isPaid = l.payment_status==='paid';
+        const badge  = isPaid?'<span class="badge badge-green">✓ Paid</span>':'<span class="badge badge-amber">Unpaid</span>';
         const payBtn = isPaid
           ? `<button class="btn btn-outline btn-sm" onclick="togglePayment(${l.id},'unpaid')">Undo</button>`
-          : `<button class="btn btn-green btn-sm" onclick="togglePayment(${l.id},'paid')">Mark paid</button>`;
+          : `<button class="btn btn-green btn-sm" onclick="togglePayment(${l.id},'paid')">Paid ✓</button>`;
+        const cl = allClients.find(c=>c.id===l.client_id)||{};
         return `<tr>
           <td><strong>${l.client_name}</strong></td>
-          <td>${new Date(l.date).toLocaleDateString()}</td>
+          <td style="white-space:nowrap">${new Date(l.date).toLocaleDateString()}</td>
           <td>${fmtHours(parseFloat(l.hours))}</td>
           <td>${parseFloat(l.amount||0)>0?'$'+parseFloat(l.amount).toFixed(2):'—'}</td>
           <td>${badge}</td>
-          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
-          <td style="display:flex;gap:0.4rem;flex-wrap:wrap">
+          <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${l.task_description}">${l.task_description}</td>
+          <td style="display:flex;gap:0.3rem;flex-wrap:wrap">
             ${payBtn}
-            <button class="btn btn-outline btn-sm" onclick="openEditLog(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}')">✏️ Edit</button>
+            <button class="btn btn-outline btn-sm" onclick="openEditLog(${l.id},'${l.date}',${l.hours},'${l.task_description.replace(/'/g,"\\'")}','${cl.rate_type||'hourly'}',${cl.hourly_rate||0})">✏️</button>
           </td>
         </tr>`;
       }).join('');
     }
-  } catch(e) { console.error(e); }
+  } catch(e){console.error(e);}
 }
 
-async function togglePayment(id, status) {
-  try {
-    await apiFetch('/timelogs/' + id + '/payment', { method: 'PATCH', body: JSON.stringify({ payment_status: status }) });
-    loadDashboard();
-  } catch(e) { alert('Failed: ' + e.message); }
+async function togglePayment(id,status) {
+  try { await apiFetch('/timelogs/'+id+'/payment',{method:'PATCH',body:JSON.stringify({payment_status:status})}); loadDashboard(); }
+  catch(e){alert('Failed: '+e.message);}
 }
 
-// ── Edit log ─────────────────────────────────────────────────
-function openEditLog(id, date, hours, task) {
+// ── Edit log ──────────────────────────────────────────────
+function openEditLog(id,date,hours,task,rateType,hourlyRate) {
   document.getElementById('edit-log-id').value    = id;
+  document.getElementById('edit-rate-type').value = rateType;
+  document.getElementById('edit-hourly-rate').value = hourlyRate;
   document.getElementById('edit-log-date').value  = date.slice(0,10);
   document.getElementById('edit-log-hours').value = hours;
   document.getElementById('edit-log-task').value  = task;
   document.getElementById('edit-log-status').textContent = '';
+  document.getElementById('edit-amount-preview').style.display = 'none';
+  const cl = allClients.find(c=>c.rate_type===rateType);
+  document.getElementById('edit-client-info').textContent =
+    rateType==='hourly' ? `Hourly @ $${hourlyRate}/hr — new amount auto-calculated` : 'Fixed rate';
+  previewEditAmount();
   document.getElementById('modal-edit-log').classList.add('open');
 }
 
-async function saveEditLog(e) {
-  e.preventDefault();
+function previewEditAmount() {
+  const hours = parseFloat(document.getElementById('edit-log-hours').value||0);
+  const rate  = parseFloat(document.getElementById('edit-hourly-rate').value||0);
+  const type  = document.getElementById('edit-rate-type').value;
+  const prev  = document.getElementById('edit-amount-preview');
+  if(hours>0&&type==='hourly'&&rate>0) {
+    prev.textContent = `💰 New amount: $${(hours*rate).toFixed(2)} (${fmtHours(hours)} × $${rate}/hr)`;
+    prev.style.display='block';
+  } else { prev.style.display='none'; }
+}
+
+async function saveEditLog() {
   const status = document.getElementById('edit-log-status');
   const id     = document.getElementById('edit-log-id').value;
+  const hours  = parseFloat(document.getElementById('edit-log-hours').value);
+  const rate   = parseFloat(document.getElementById('edit-hourly-rate').value||0);
+  const type   = document.getElementById('edit-rate-type').value;
+  const date   = document.getElementById('edit-log-date').value;
+  const task   = document.getElementById('edit-log-task').value;
+  const amount = type==='hourly'&&rate>0 ? (hours*rate).toFixed(2) : undefined;
   try {
-    await apiFetch('/timelogs/' + id, {
-      method: 'PUT',
-      body: JSON.stringify({
-        date:             document.getElementById('edit-log-date').value,
-        hours:            document.getElementById('edit-log-hours').value,
-        task_description: document.getElementById('edit-log-task').value
-      })
-    });
-    status.className = 'form-status success';
-    status.textContent = '✓ Updated!';
-    setTimeout(() => { document.getElementById('modal-edit-log').classList.remove('open'); loadDashboard(); }, 800);
-  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
+    await apiFetch('/timelogs/'+id,{method:'PUT',body:JSON.stringify({hours,task_description:task,date,amount})});
+    status.className='form-status success'; status.textContent='✓ Updated!';
+    setTimeout(()=>{ document.getElementById('modal-edit-log').classList.remove('open'); loadDashboard(); },700);
+  } catch(err){ status.className='form-status error'; status.textContent=err.message; }
 }
 
-// ── Timer ────────────────────────────────────────────────────
-let timerInterval=null, timerSeconds=0, timerRunning=false;
-function updateTimerDisplay() {
-  const h=Math.floor(timerSeconds/3600).toString().padStart(2,'0');
-  const m=Math.floor((timerSeconds%3600)/60).toString().padStart(2,'0');
-  const s=(timerSeconds%60).toString().padStart(2,'0');
-  document.getElementById('timer-display').textContent=`${h}:${m}:${s}`;
-}
-function startTimer() {
-  if(timerRunning) return;
-  timerRunning=true;
-  timerInterval=setInterval(()=>{timerSeconds++;updateTimerDisplay();},1000);
-  document.getElementById('btn-start').style.display='none';
-  document.getElementById('btn-stop').style.display='inline-flex';
-}
-async function stopTimer() {
-  if(!timerRunning) return;
-  clearInterval(timerInterval); timerRunning=false;
-  const hours = Math.round((timerSeconds/3600)*100)/100;
-  const clientId = document.getElementById('timer-client').value;
-  const task     = document.getElementById('timer-task').value;
-  if(!clientId){alert('Please select a client.');startTimer();return;}
-  if(hours<0.01){alert('Timer too short to log.');resetTimer();return;}
-  try {
-    await apiFetch('/timelogs',{method:'POST',body:JSON.stringify({client_id:clientId,hours,task_description:task||'Timed session',date:new Date().toISOString().slice(0,10),source:'timer'})});
-    alert(`✓ Logged ${fmtHours(hours)} successfully!`);
-    resetTimer(); loadDashboard();
-  } catch(e){alert('Failed: '+e.message);}
-  document.getElementById('btn-start').style.display='inline-flex';
-  document.getElementById('btn-stop').style.display='none';
-}
-function resetTimer(){
-  clearInterval(timerInterval);timerRunning=false;timerSeconds=0;updateTimerDisplay();
-  document.getElementById('btn-start').style.display='inline-flex';
-  document.getElementById('btn-stop').style.display='none';
-}
+// ── Timer ─────────────────────────────────────────────────
+let timerInterval=null,timerSeconds=0,timerRunning=false;
+function updateDisplay(){ const h=Math.floor(timerSeconds/3600),m=Math.floor((timerSeconds%3600)/60),s=timerSeconds%60; document.getElementById('timer-display').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function startTimer(){ if(timerRunning)return; timerRunning=true; timerInterval=setInterval(()=>{timerSeconds++;updateDisplay();},1000); document.getElementById('btn-start').style.display='none'; document.getElementById('btn-stop').style.display='inline-flex'; }
+async function stopTimer(){ if(!timerRunning)return; clearInterval(timerInterval);timerRunning=false; const hours=Math.round((timerSeconds/3600)*100)/100; const clientId=document.getElementById('timer-client').value; const task=document.getElementById('timer-task').value; if(!clientId){alert('Select a client first.');startTimer();return;} if(hours<0.01){alert('Too short to log.');resetTimer();return;} try{ await apiFetch('/timelogs',{method:'POST',body:JSON.stringify({client_id:clientId,hours,task_description:task||'Timed session',date:new Date().toISOString().slice(0,10),source:'timer'})}); alert(`✓ Logged ${fmtHours(hours)}!`); resetTimer();loadDashboard(); }catch(e){alert('Failed: '+e.message);} document.getElementById('btn-start').style.display='inline-flex'; document.getElementById('btn-stop').style.display='none'; }
+function resetTimer(){ clearInterval(timerInterval);timerRunning=false;timerSeconds=0;updateDisplay(); document.getElementById('btn-start').style.display='inline-flex'; document.getElementById('btn-stop').style.display='none'; }
 
-// ── Manual log ───────────────────────────────────────────────
-async function submitManualLog(e) {
-  e.preventDefault();
-  const status = document.getElementById('log-status');
-  try {
-    await apiFetch('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})});
-    status.className='form-status success'; status.textContent='✓ Log saved!';
-    e.target.reset(); document.getElementById('log-date').value=new Date().toISOString().slice(0,10);
-    loadDashboard(); setTimeout(()=>status.textContent='',3000);
-  } catch(err){status.className='form-status error';status.textContent=err.message;}
-}
+// ── Manual log ────────────────────────────────────────────
+async function submitManualLog(e){ e.preventDefault(); const st=document.getElementById('log-status'); try{ await apiFetch('/timelogs',{method:'POST',body:JSON.stringify({...Object.fromEntries(new FormData(e.target)),source:'manual'})}); st.className='form-status success';st.textContent='✓ Log saved!'; e.target.reset();document.getElementById('log-date').value=new Date().toISOString().slice(0,10); loadDashboard();setTimeout(()=>st.textContent='',3000); }catch(err){st.className='form-status error';st.textContent=err.message;} }
 
-// ── Add client ───────────────────────────────────────────────
-async function addClient(e) {
-  e.preventDefault();
-  const status = document.getElementById('client-status');
-  try {
-    await apiFetch('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
-    status.className='form-status success'; status.textContent='✓ Client created!';
-    e.target.reset();
-    setTimeout(()=>{document.getElementById('modal-client').classList.remove('open');status.textContent='';},1200);
-    loadDashboard();
-  } catch(err){status.className='form-status error';status.textContent=err.message;}
-}
+// ── Add client ────────────────────────────────────────────
+async function addClient(e){ e.preventDefault(); const st=document.getElementById('client-status'); try{ await apiFetch('/clients',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.target)))}); st.className='form-status success';st.textContent='✓ Client created!'; e.target.reset();setTimeout(()=>{document.getElementById('modal-client').classList.remove('open');st.textContent='';},1200);loadDashboard(); }catch(err){st.className='form-status error';st.textContent=err.message;} }
 
 loadDashboard();
 </script>
+
+<script>
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('is-open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('is-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+});
+</script>
+
 </body>
 </html>
