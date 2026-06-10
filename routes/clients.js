@@ -1,300 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clients — QFA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../css/style.css"/>
+const router = require('express').Router();
+const bcrypt = require('bcryptjs');
+const pool   = require('../db/pool');
+const { requireFreelancer } = require('../middleware/auth');
 
-</head>
-<body>
-
-<div class="mobile-topbar">
-  <div class="mobile-topbar-brand">
-    <img src="../QFA_Logo.png" alt="QFA"/>
-    <span>Quick Freelancing Agency</span>
-  </div>
-  <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
-</div>
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-
-<div class="mobile-topbar">
-  <div class="mobile-topbar-brand">
-    <img src="../QFA_Logo.png" alt="QFA"/>
-    <span>Quick Freelancing Agency</span>
-  </div>
-  <button class="mobile-menu-btn" onclick="openSidebar()">☰</button>
-</div>
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<div class="dashboard">
-  <aside class="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem">
-      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
-        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
-      </div>
-      <div style="line-height:1.2">
-        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="dashboard.html">📊 Overview</a>
-      <a href="time-logs.html">⏱ Time Logs</a>
-      <a href="clients.html" class="active">👥 Clients</a>
-      <a href="schedule.html">📅 Schedule</a>
-      <a href="portfolio-admin.html">🖼 Portfolio</a>
-      <a href="../index.html" target="_blank">🌐 Public Site</a>
-    </nav>
-    <div class="sidebar-user">
-      <strong id="user-name">Loading…</strong>
-      <span>Freelancer · QFA</span>
-      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out →</a>
-    </div>
-  </aside>
-
-  <main class="main-content">
-    <h2 class="page-title">Clients</h2>
-    <p class="page-sub">Manage clients, billing rates, and payment status.</p>
-
-    <div style="margin-bottom:1.5rem">
-      <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add('open')">+ Add New Client</button>
-    </div>
-
-    <div id="clients-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem">
-      <p style="color:var(--ink3)">Loading…</p>
-    </div>
-  </main>
-</div>
-
-<!-- Add Client Modal -->
-<div class="modal-overlay" id="modal-add">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Add New Client</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
-    </div>
-    <form class="modal-form" onsubmit="addClient(event)">
-      <div class="form-group"><label>Full name</label><input type="text" name="name" required/></div>
-      <div class="form-group"><label>Email address</label><input type="email" name="email" required/></div>
-      <div class="form-group"><label>Company (optional)</label><input type="text" name="company"/></div>
-      <div class="form-group"><label>Temporary password</label><input type="text" name="password" required placeholder="Client uses this to log in"/></div>
-      <div style="border-top:1px solid var(--paper3);padding-top:1rem;margin-top:0.5rem">
-        <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.8rem;color:var(--ink)">💰 Billing Settings</p>
-        <div class="form-group">
-          <label>Rate type</label>
-          <select name="rate_type" id="add-rate-type" onchange="toggleRateFields('add')">
-            <option value="hourly">Hourly rate</option>
-            <option value="fixed">Fixed price project</option>
-          </select>
-        </div>
-        <div class="form-group" id="add-hourly-field">
-          <label>Your hourly rate ($)</label>
-          <input type="number" name="hourly_rate" min="1" step="0.5" placeholder="e.g. 25"/>
-        </div>
-        <div class="form-group" id="add-fixed-field" style="display:none">
-          <label>Fixed project price ($)</label>
-          <input type="number" name="fixed_price" min="1" step="1" placeholder="e.g. 500"/>
-        </div>
-      </div>
-      <button type="submit" class="btn-primary">Create client</button>
-      <div id="add-status" class="form-status"></div>
-    </form>
-  </div>
-</div>
-
-<!-- Edit Client Modal -->
-<div class="modal-overlay" id="modal-edit">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Edit Client</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-edit').classList.remove('open')">✕</button>
-    </div>
-    <form class="modal-form" onsubmit="saveClient(event)">
-      <input type="hidden" name="id" id="edit-id"/>
-      <div class="form-group"><label>Full name</label><input type="text" name="name" id="edit-name" required/></div>
-      <div class="form-group"><label>Company</label><input type="text" name="company" id="edit-company"/></div>
-      <div class="form-group"><label>Notes</label><textarea name="notes" id="edit-notes" rows="2"></textarea></div>
-      <div style="border-top:1px solid var(--paper3);padding-top:1rem;margin-top:0.5rem">
-        <p style="font-size:0.85rem;font-weight:600;margin-bottom:0.8rem;color:var(--ink)">💰 Billing Settings</p>
-        <div class="form-group">
-          <label>Rate type</label>
-          <select name="rate_type" id="edit-rate-type" onchange="toggleRateFields('edit')">
-            <option value="hourly">Hourly rate</option>
-            <option value="fixed">Fixed price project</option>
-          </select>
-        </div>
-        <div class="form-group" id="edit-hourly-field">
-          <label>Your hourly rate ($)</label>
-          <input type="number" name="hourly_rate" id="edit-hourly-rate" min="1" step="0.5"/>
-        </div>
-        <div class="form-group" id="edit-fixed-field" style="display:none">
-          <label>Fixed project price ($)</label>
-          <input type="number" name="fixed_price" id="edit-fixed-price" min="1" step="1"/>
-        </div>
-      </div>
-      <button type="submit" class="btn-primary">Save changes</button>
-      <div id="edit-status" class="form-status"></div>
-    </form>
-  </div>
-</div>
-
-<script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const auth = {
-  token: () => localStorage.getItem('token'),
-  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
-  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
-  isLoggedIn: () => !!localStorage.getItem('token'),
-  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
-};
-async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
-  return res.json();
-}
-(function() {
-  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
-  document.getElementById('user-name').textContent = auth.user()?.name || '';
-})();
-function logout() { auth.clear(); window.location.href = 'login.html'; }
-
-function toggleRateFields(prefix) {
-  const type = document.getElementById(prefix + '-rate-type').value;
-  document.getElementById(prefix + '-hourly-field').style.display = type === 'hourly' ? 'flex' : 'none';
-  document.getElementById(prefix + '-fixed-field').style.display  = type === 'fixed'  ? 'flex' : 'none';
-}
-
-async function loadClients() {
+// GET /api/clients
+router.get('/', requireFreelancer, async (req, res, next) => {
   try {
-    const clients = await apiFetch('/clients');
-    const grid = document.getElementById('clients-grid');
-    if (!clients.length) {
-      grid.innerHTML = '<p style="color:var(--ink3)">No clients yet. Add your first one!</p>';
-      return;
-    }
-    grid.innerHTML = clients.map(c => {
-      const isFixed = c.rate_type === 'fixed';
-      const isPaid  = c.fixed_payment_status === 'paid';
-
-      const rateInfo = isFixed
-        ? `<span class="badge badge-blue">Fixed</span> <strong>$${parseFloat(c.fixed_price||0).toFixed(2)}</strong>`
-        : `<span class="badge badge-green">Hourly</span> <strong>$${parseFloat(c.hourly_rate||0).toFixed(2)}/hr</strong>`;
-
-      // Fixed payment button
-      const fixedPayBtn = isFixed ? `
-        <div style="margin:0.8rem 0;padding:0.8rem;background:${isPaid?'#dcfce7':'#fef3c7'};border-radius:8px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:0.82rem;font-weight:600;color:${isPaid?'#166534':'#92400e'}">
-            ${isPaid ? '✅ Fixed payment received' : '⏳ Fixed payment pending'}
-          </span>
-          <button class="btn-sm ${isPaid?'btn-outline':'btn-green'}"
-            onclick="toggleFixedPayment(${c.id}, '${isPaid?'unpaid':'paid'}')">
-            ${isPaid ? 'Mark unpaid' : 'Mark paid ✓'}
-          </button>
-        </div>` : '';
-
-      return `
-        <div class="card" style="margin-bottom:0">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.8rem">
-            <div>
-              <div style="font-weight:600;font-size:1rem">${c.name}</div>
-              <div style="font-size:0.82rem;color:var(--ink3)">${c.company || c.email}</div>
-            </div>
-            <span class="badge ${c.is_active ? 'badge-green' : 'badge-gray'}">${c.is_active ? 'Active' : 'Inactive'}</span>
-          </div>
-          <div style="display:flex;gap:1rem;font-size:0.82rem;color:var(--ink2);margin-bottom:0.8rem;flex-wrap:wrap">
-            <span>⏱ ${parseFloat(c.total_hours||0).toFixed(1)}h logged</span>
-            <span>📋 ${c.log_count || 0} entries</span>
-            <span>💰 ${rateInfo}</span>
-          </div>
-          ${fixedPayBtn}
-          <div style="display:flex;gap:0.6rem;margin-top:0.5rem">
-            <button class="btn-sm btn-outline" onclick='openEdit(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Edit</button>
-            <button class="btn-sm btn-red" onclick="deleteClient(${c.id}, '${c.name}')">Remove</button>
-          </div>
-        </div>`;
-    }).join('');
-  } catch(e) { console.error(e); }
-}
-
-async function toggleFixedPayment(clientId, newStatus) {
-  try {
-    await apiFetch('/clients/' + clientId + '/fixed-payment', {
-      method: 'PATCH',
-      body: JSON.stringify({ fixed_payment_status: newStatus })
-    });
-    loadClients();
-  } catch(e) { alert('Failed: ' + e.message); }
-}
-
-function openEdit(c) {
-  document.getElementById('edit-id').value          = c.id;
-  document.getElementById('edit-name').value        = c.name;
-  document.getElementById('edit-company').value     = c.company || '';
-  document.getElementById('edit-notes').value       = c.notes || '';
-  document.getElementById('edit-rate-type').value   = c.rate_type || 'hourly';
-  document.getElementById('edit-hourly-rate').value = c.hourly_rate || '';
-  document.getElementById('edit-fixed-price').value = c.fixed_price || '';
-  toggleRateFields('edit');
-  document.getElementById('modal-edit').classList.add('open');
-}
-
-async function addClient(e) {
-  e.preventDefault();
-  const status = document.getElementById('add-status');
-  try {
-    await apiFetch('/clients', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
-    status.className = 'form-status success';
-    status.textContent = '✓ Client created!';
-    e.target.reset();
-    setTimeout(() => { document.getElementById('modal-add').classList.remove('open'); status.textContent=''; }, 1200);
-    loadClients();
-  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
-}
-
-async function saveClient(e) {
-  e.preventDefault();
-  const status = document.getElementById('edit-status');
-  const data = Object.fromEntries(new FormData(e.target));
-  try {
-    await apiFetch('/clients/' + data.id, { method: 'PUT', body: JSON.stringify(data) });
-    status.className = 'form-status success'; status.textContent = '✓ Saved!';
-    setTimeout(() => { document.getElementById('modal-edit').classList.remove('open'); status.textContent=''; }, 1000);
-    loadClients();
-  } catch(err) { status.className = 'form-status error'; status.textContent = err.message; }
-}
-
-async function deleteClient(id, name) {
-  if (!confirm(`Remove client "${name}"?`)) return;
-  try { await apiFetch('/clients/' + id, { method: 'DELETE' }); loadClients(); }
-  catch(e) { alert('Failed: ' + e.message); }
-}
-
-loadClients();
-</script>
-
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
+    const { rows } = await pool.query(`
+      SELECT u.id, u.name, u.email, u.company,
+             c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price,
+             c.fixed_payment_status,
+             COUNT(t.id)::int AS log_count,
+             COALESCE(SUM(t.hours),0)::float AS total_hours
+      FROM users u
+      JOIN clients c ON c.user_id = u.id
+      LEFT JOIN time_logs t ON t.client_id = u.id
+      WHERE u.role = 'client'
+      GROUP BY u.id, u.name, u.email, u.company,
+               c.is_active, c.notes, c.rate_type, c.hourly_rate, c.fixed_price, c.fixed_payment_status
+      ORDER BY u.name
+    `);
+    res.json(rows);
+  } catch (e) { next(e); }
 });
-</script>
 
-</body>
-</html>
+// POST /api/clients
+router.post('/', requireFreelancer, async (req, res, next) => {
+  try {
+    const { name, email, company, password, notes, rate_type, hourly_rate, fixed_price } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'name, email, password required' });
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('BEGIN');
+    try {
+      const userRow = await pool.query(
+        `INSERT INTO users (name, email, password_hash, role, company)
+         VALUES ($1,$2,$3,'client',$4) RETURNING id, name, email, company`,
+        [name, email.toLowerCase().trim(), hash, company || null]
+      );
+      await pool.query(
+        `INSERT INTO clients (user_id, notes, rate_type, hourly_rate, fixed_price, fixed_payment_status)
+         VALUES ($1,$2,$3,$4,$5,'unpaid')`,
+        [userRow.rows[0].id, notes || null, rate_type || 'hourly', hourly_rate || null, fixed_price || null]
+      );
+      await pool.query('COMMIT');
+      res.status(201).json(userRow.rows[0]);
+    } catch (e) {
+      await pool.query('ROLLBACK');
+      if (e.code === '23505') return res.status(409).json({ error: 'Email already exists' });
+      throw e;
+    }
+  } catch (e) { next(e); }
+});
+
+// PUT /api/clients/:id
+router.put('/:id', requireFreelancer, async (req, res, next) => {
+  try {
+    const { name, company, notes, is_active, rate_type, hourly_rate, fixed_price } = req.body;
+    await pool.query(
+      `UPDATE users SET name=$1, company=$2, updated_at=NOW()
+       WHERE id=$3 AND role='client'`,
+      [name, company, req.params.id]
+    );
+    await pool.query(
+      `UPDATE clients SET notes=$1, is_active=$2, rate_type=$3, hourly_rate=$4, fixed_price=$5
+       WHERE user_id=$6`,
+      [notes, is_active ?? true, rate_type || 'hourly', hourly_rate || null, fixed_price || null, req.params.id]
+    );
+    res.json({ message: 'Updated' });
+  } catch (e) { next(e); }
+});
+
+// PATCH /api/clients/:id/fixed-payment — mark fixed client as paid or unpaid
+router.patch('/:id/fixed-payment', requireFreelancer, async (req, res, next) => {
+  try {
+    const { fixed_payment_status } = req.body;
+    if (!['paid','unpaid'].includes(fixed_payment_status))
+      return res.status(400).json({ error: 'fixed_payment_status must be paid or unpaid' });
+    await pool.query(
+      `UPDATE clients SET fixed_payment_status=$1 WHERE user_id=$2`,
+      [fixed_payment_status, req.params.id]
+    );
+    res.json({ message: 'Updated' });
+  } catch (e) { next(e); }
+});
+
+// DELETE /api/clients/:id
+router.delete('/:id', requireFreelancer, async (req, res, next) => {
+  try {
+    await pool.query(`DELETE FROM users WHERE id=$1 AND role='client'`, [req.params.id]);
+    res.json({ message: 'Deleted' });
+  } catch (e) { next(e); }
+});
+
+module.exports = router;
