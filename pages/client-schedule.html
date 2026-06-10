@@ -10,13 +10,19 @@
 
 </head>
 <body>
+<div class="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
 
 
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 
 
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="dashboard">
   <aside class="sidebar">
     <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem"><div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0"><img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/></div><div style="line-height:1.2"><div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div><div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div></div></div>
@@ -213,25 +219,7 @@ async function cancelBooking(id) {
 loadBookings();
 </script>
 
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
-});
-</script>
+
 
 </body>
 </html>
