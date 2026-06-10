@@ -104,7 +104,6 @@
 <body>
 <div class="page">
 
-  <!-- LEFT brand panel -->
   <div class="left-panel">
     <div class="left-logo">
       <div class="left-logo-img"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -125,7 +124,6 @@
     <div class="left-footer">© 2025 Quick Freelancing Agency · ndy.andupa@gmail.com</div>
   </div>
 
-  <!-- RIGHT login panel -->
   <div class="right-panel">
     <div class="mobile-header">
       <div class="mobile-header-img"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -189,13 +187,15 @@ const auth = {
   }
 };
 
-// Only auto-redirect if session is still valid
-(function() {
+// Safe implementation wrap for layout checks
+document.addEventListener('DOMContentLoaded', () => {
   if (auth.isLoggedIn()) {
     const u = auth.user();
-    window.location.href = u && u.role === 'client' ? 'client-portal.html' : 'dashboard.html';
+    if (u) {
+      window.location.href = u.role === 'client' ? 'client-portal.html' : 'dashboard.html';
+    }
   }
-})();
+});
 
 async function doLogin() {
   const btn      = document.getElementById('login-btn');
@@ -225,7 +225,10 @@ async function doLogin() {
     progress.style.transition = 'width .2s linear';
     progress.style.width = '100%';
     btnText.textContent = '✓ Success! Redirecting…';
+    
+    // Save token data safely
     auth.save(data.token, data.user);
+    
     setTimeout(() => {
       window.location.href = data.user.role === 'client' ? 'client-portal.html' : 'dashboard.html';
     }, 500);
