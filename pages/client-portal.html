@@ -10,13 +10,19 @@
 
 </head>
 <body>
+<div class="mob-bar">
+  <div class="mob-brand">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>Quick Freelancing Agency</span>
+  </div>
+  <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
+</div>
+<div class="overlay" id="overlay" onclick="sbClose()"></div>
 
 
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 
 
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="dashboard">
   <aside class="sidebar">
     <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem">
@@ -342,25 +348,7 @@ async function bookSession(e) {
 loadPortal();
 </script>
 
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
-});
-</script>
+
 
 </body>
 </html>
