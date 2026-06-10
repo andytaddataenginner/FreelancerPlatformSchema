@@ -26,7 +26,7 @@
     /* ── LAYOUT FIXES ── */
     .layout { display: flex; min-height: 100vh; }
 
-    /* ── SIDEBAR MOBILE FIXES (Explicit overrides for external CSS) ── */
+    /* ── SIDEBAR DEFAULT (Desktop - Visible on left) ── */
     .sidebar {
       width: 240px !important; 
       background: var(--navy) !important; 
@@ -37,7 +37,7 @@
       display: flex !important;
       flex-direction: column !important; 
       z-index: 150 !important;
-      transform: translateX(-100%);
+      transform: translateX(0); /* Visible on desktop */
       transition: transform 0.3s ease-in-out !important;
     }
     
@@ -61,7 +61,7 @@
       padding: 0.8rem 0 !important; 
       overflow-y: auto !important;
       display: flex !important;
-      flex-direction: column !important; /* Forces items into a neat vertical list */
+      flex-direction: column !important; 
       gap: 0.2rem !important;
       width: 100% !important;
     }
@@ -96,7 +96,7 @@
     .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
     .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
 
-    /* ── MOBILE NAV ── */
+    /* ── MOBILE NAV BAR ── */
     .mobile-header {
       display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       background: var(--navy); padding: 0.8rem 1rem;
@@ -116,8 +116,6 @@
     .sidebar-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px);
     }
-    .sidebar-overlay.visible { display: block !important; }
-    .sidebar.is-open { transform: translateX(0) !important; }
 
     /* ── MAIN CONTENT AREA ── */
     .main { margin-left: 240px; flex: 1; padding: 0; }
@@ -173,9 +171,11 @@
     .form-status.success { color: var(--green); }
     .form-status.error   { color: var(--red); }
 
-    /* ── RESPONSIVE RESPONSES ── */
+    /* ── RESPONSIVE MEDIA QUERIES ── */
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); }
+      .sidebar { transform: translateX(-100%); } /* Hides sidebar only on mobile screen */
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
       .main { margin-left: 0 !important; padding-top: 56px !important; }
       .mobile-header { display: flex !important; }
       .topbar { top: 56px !important; }
@@ -186,6 +186,7 @@
 </head>
 <body>
 
+<!-- Mobile Header -->
 <div class="mobile-header" id="mobile-header">
   <div class="mobile-logo">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -194,9 +195,11 @@
   <button class="hamburger-btn" onclick="openSidebar()">☰</button>
 </div>
 
+<!-- Backdrop Scrim -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="layout">
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -217,6 +220,7 @@
     </div>
   </aside>
 
+  <!-- MAIN WRAPPER -->
   <div class="main">
     <div class="topbar">
       <h2>Clients</h2>
@@ -235,6 +239,7 @@
   </div>
 </div>
 
+<!-- Add Client Modal -->
 <div class="modal-overlay" id="modal-add">
   <div class="modal">
     <div class="modal-header">
@@ -270,6 +275,7 @@
   </div>
 </div>
 
+<!-- Edit Client Modal -->
 <div class="modal-overlay" id="modal-edit">
   <div class="modal">
     <div class="modal-header">
@@ -442,6 +448,7 @@ async function deleteClient(id, name) {
 loadClients();
 </script>
 
+<!-- Mobile Navigation Trigger Logic -->
 <script>
 function openSidebar() {
   document.getElementById('sidebar').classList.add('is-open');
