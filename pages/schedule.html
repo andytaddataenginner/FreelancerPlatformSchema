@@ -3,23 +3,151 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Schedule — YourName</title>
+  <title>Schedule — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+    }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
 
+    /* ── LAYOUT FRAMEWORK ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── HYBRID SIDEBAR FIX ── */
+    .sidebar {
+      width: 240px !important; 
+      background: var(--navy) !important; 
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; height: 100vh !important; 
+      display: flex !important; flex-direction: column !important; 
+      z-index: 150 !important;
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out !important;
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.5rem !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .sidebar-nav { 
+      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
+      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
+    }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 4px solid transparent !important;
+      border-left: none !important; width: 100% !important; box-sizing: border-box !important;
+      justify-content: flex-start !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: var(--gold2) !important; }
+
+    .sidebar-user { 
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE HEADER BAR ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--navy); padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    /* ── MAIN CONTAINER LAYOUT ── */
+    .main { margin-left: 240px; flex: 1; padding: 0; }
+    .topbar { background: white; border-bottom: 1px solid rgba(13,35,83,0.08); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40; }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+    .content { padding: 1.5rem; }
+
+    /* ── PAGES ELEMENTS ── */
+    .card { background: white; border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05); }
+    .btn-primary { padding: 0.6rem 1.2rem; background: var(--navy); color: white; border: none; border-radius: 8px; font-family: var(--sans); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-sm { padding: 0.4rem 0.8rem; border-radius: 6px; font-family: var(--sans); font-size: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.2rem; }
+    .btn-red { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+
+    /* ── MODALS ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(13,35,83,0.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 1rem; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 18px; padding: 1.5rem; width: 100%; max-width: 440px; box-shadow: 0 24px 80px rgba(13,35,83,0.2); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+    .modal-header h3 { font-family: var(--serif); font-size: 1.2rem; }
+    .modal-close { background: var(--bg); border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    
+    .modal-form { display: flex; flex-direction: column; gap: 0.8rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+    .form-group input, .form-group select { padding: 0.7rem 0.9rem; border: 1.5px solid rgba(13,35,83,0.1); border-radius: 9px; background: var(--bg); font-family: var(--sans); font-size: 0.88rem; color: var(--navy); }
+    .form-status { font-size: 0.8rem; margin-top: 0.2rem; }
+    .form-status.success { color: var(--green); }
+    .form-status.error { color: var(--red); }
+
+    /* ── REPTILIAN RESPONSIVE BLOCK ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main { margin-left: 0 !important; padding-top: 56px !important; }
+      .mobile-header { display: flex !important; }
+      .topbar { top: 56px !important; }
+      .content { padding: 1rem !important; }
+      #events-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+</div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-
-
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<div class="dashboard">
-  <aside class="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem"><div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0"><img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/></div><div style="line-height:1.2"><div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div><div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div></div></div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
+    </div>
     <nav class="sidebar-nav">
       <a href="dashboard.html">📊 Overview</a>
       <a href="time-logs.html">⏱ Time Logs</a>
@@ -30,139 +158,17 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name">Loading…</strong>
-      <span>Freelancer</span><br/>
-      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+      <span>Freelancer · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
     </div>
   </aside>
 
-  <main class="main-content">
-    <h2 class="page-title">Schedule</h2>
-    <p class="page-sub">View and manage client booking requests.</p>
-
-    <div class="stats-row" style="margin-bottom:1.5rem">
-      <div class="stat-card"><span class="stat-num" id="s-pending">—</span><span class="stat-label">Pending requests</span></div>
-      <div class="stat-card"><span class="stat-num" id="s-confirmed">—</span><span class="stat-label">Confirmed</span></div>
-      <div class="stat-card"><span class="stat-num" id="s-upcoming">—</span><span class="stat-label">Upcoming (7 days)</span></div>
+  <div class="main">
+    <div class="topbar">
+      <h2>Schedule</h2>
+      <p>Organize dates, consultations, or targeted milestone checks.</p>
     </div>
 
-    <div class="card">
-      <div class="card-header"><h3>All Bookings</h3>
-        <div style="display:flex;gap:0.5rem">
-          <button class="btn-sm btn-outline" onclick="filterBookings('all')">All</button>
-          <button class="btn-sm btn-outline" onclick="filterBookings('pending')">Pending</button>
-          <button class="btn-sm btn-outline" onclick="filterBookings('confirmed')">Confirmed</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Client</th><th>Date & Time</th><th>Type</th><th>Duration</th><th>Message</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="bookings-table">
-            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-</div>
-
-<script>
-const API = 'https://freelancer-platform-9jut.onrender.com/api';
-const auth = {
-  token: () => localStorage.getItem('token'),
-  user:  () => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } },
-  clear: () => { localStorage.removeItem('token'); localStorage.removeItem('user'); },
-  isLoggedIn: () => !!localStorage.getItem('token'),
-  headers: () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') })
-};
-async function apiFetch(path, options = {}) {
-  const res = await fetch(API + path, { ...options, headers: { ...auth.headers(), ...(options.headers||{}) } });
-  if (res.status === 401) { auth.clear(); window.location.href = 'login.html'; return; }
-  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error||'Failed'); }
-  return res.json();
-}
-(function() {
-  if (!auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
-  document.getElementById('user-name').textContent = auth.user()?.name || '';
-})();
-function logout() { auth.clear(); window.location.href = 'login.html'; }
-
-let allBookings = [];
-
-async function loadBookings() {
-  try {
-    allBookings = await apiFetch('/schedule');
-    const now = new Date();
-    const in7 = new Date(); in7.setDate(in7.getDate()+7);
-    document.getElementById('s-pending').textContent   = allBookings.filter(b=>b.status==='pending').length;
-    document.getElementById('s-confirmed').textContent = allBookings.filter(b=>b.status==='confirmed').length;
-    document.getElementById('s-upcoming').textContent  = allBookings.filter(b=>new Date(b.date)>=now && new Date(b.date)<=in7 && b.status!=='cancelled').length;
-    renderBookings(allBookings);
-  } catch(e) { console.error(e); }
-}
-
-function filterBookings(status) {
-  const filtered = status === 'all' ? allBookings : allBookings.filter(b => b.status === status);
-  renderBookings(filtered);
-}
-
-function renderBookings(bookings) {
-  const tbody = document.getElementById('bookings-table');
-  if (!bookings.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink3)">No bookings found.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = bookings.map(b => {
-    const badgeClass = b.status==='confirmed' ? 'badge-green' : b.status==='pending' ? 'badge-amber' : 'badge-gray';
-    const actions = b.status === 'pending'
-      ? `<button class="btn-sm btn-green" onclick="updateStatus(${b.id},'confirmed')">Confirm</button>
-         <button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')" style="margin-left:4px">Cancel</button>`
-      : b.status === 'confirmed'
-      ? `<button class="btn-sm btn-red" onclick="updateStatus(${b.id},'cancelled')">Cancel</button>`
-      : '—';
-    return `
-      <tr>
-        <td><strong>${b.client_name}</strong><br/><span style="font-size:0.78rem;color:var(--ink3)">${b.client_email}</span></td>
-        <td>${new Date(b.date).toLocaleDateString()} at ${b.time}</td>
-        <td>${b.type_label || b.type}</td>
-        <td>${b.duration}h</td>
-        <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.message || '—'}</td>
-        <td><span class="badge ${badgeClass}">${b.status}</span></td>
-        <td>${actions}</td>
-      </tr>`;
-  }).join('');
-}
-
-async function updateStatus(id, status) {
-  try {
-    await apiFetch('/schedule/' + id + '/status', { method: 'PATCH', body: JSON.stringify({ status }) });
-    loadBookings();
-  } catch(e) { alert('Failed: ' + e.message); }
-}
-
-loadBookings();
-</script>
-
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
-});
-</script>
-
-</body>
-</html>
+    <div class="content">
+      <div style="margin-bottom:1.5rem">
+        <button class="btn-primary" onclick="document.getElementById('modal-add').classList.add
