@@ -7,19 +7,102 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .dashboard { display: flex; min-height: 100vh; }
 
+    /* ── FIXED DESKTOP SIDEBAR ── */
+    .sidebar {
+      width: 240px !important; 
+      background: #0d2353 !important; 
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; height: 100vh !important; 
+      display: flex !important; flex-direction: column !important; 
+      z-index: 150 !important;
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out !important;
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.5rem !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
+    }
+    .sidebar-nav { 
+      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
+      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
+    }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 4px solid transparent !important;
+      width: 100% !important; box-sizing: border-box !important;
+      justify-content: flex-start !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
+    .sidebar-user { 
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
+    }
+
+    /* ── MOBILE HEADER BAR ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    /* ── RESPONSIVE MAIN CONTAINER ── */
+    .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
+    .booking-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+
+    /* ── MOBILE MEDIA QUERIES ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
+      .mobile-header { display: flex !important; }
+      .booking-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
+  <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+</div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-
-
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="dashboard">
-  <aside class="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem"><div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0"><img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/></div><div style="line-height:1.2"><div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div><div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div></div></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
     <nav class="sidebar-nav">
       <a href="client-portal.html">📊 My Overview</a>
       <a href="client-logs.html">⏱ My Time Logs</a>
@@ -27,8 +110,8 @@
       <a href="../index.html" target="_blank">🌐 Portfolio</a>
     </nav>
     <div class="sidebar-user">
-      <strong id="user-name">Loading…</strong>
-      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
+      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out</a>
     </div>
   </aside>
 
@@ -36,10 +119,9 @@
     <h2 class="page-title">Book a Session</h2>
     <p class="page-sub">Request a meeting or working session. I'll confirm within 24 hours.</p>
 
-    <!-- Booking form -->
     <div class="card" style="max-width:620px;margin-bottom:2rem">
       <div class="card-header"><h3>📅 New Booking Request</h3></div>
-      <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
+      <form onsubmit="bookSession(event)" class="booking-grid">
         <div class="form-group">
           <label>Preferred date</label>
           <input type="date" name="date" id="book-date" required/>
@@ -87,7 +169,6 @@
       </form>
     </div>
 
-    <!-- Upcoming bookings -->
     <div class="card">
       <div class="card-header"><h3>Your Sessions</h3></div>
       <div id="bookings-list"><p style="color:var(--ink3)">Loading…</p></div>
@@ -120,22 +201,18 @@ async function apiFetch(path, options = {}) {
 function logout() { auth.clear(); window.location.href = '../index.html'; }
 
 const TYPE_LABELS = { call:'Video call / meeting', review:'Project review', workshop:'Working session', other:'Other' };
-
 async function loadBookings() {
   try {
     const bookings = await apiFetch('/client/bookings');
     const list = document.getElementById('bookings-list');
-
     if (!bookings.length) {
       list.innerHTML = '<p style="color:var(--ink3);font-size:0.9rem">No sessions yet. Book your first one above!</p>';
       return;
     }
 
-    // Sort: upcoming first, then past
     const now = new Date();
     const upcoming = bookings.filter(b => new Date(b.date) >= now && b.status !== 'cancelled');
     const past     = bookings.filter(b => new Date(b.date) <  now || b.status === 'cancelled');
-
     let html = '';
 
     if (upcoming.length) {
@@ -153,15 +230,13 @@ async function loadBookings() {
 }
 
 function bookingCard(b) {
-  const badgeClass = b.status === 'confirmed' ? 'badge-green'
-                   : b.status === 'pending'   ? 'badge-amber'
-                   : 'badge-gray';
+  const badgeClass = b.status === 'confirmed' ? 'badge-green' : b.status === 'pending' ? 'badge-amber' : 'badge-gray';
   const cancelBtn = b.status !== 'cancelled' && new Date(b.date) >= new Date()
     ? `<button class="btn-sm btn-red" onclick="cancelBooking(${b.id})" style="margin-top:0.6rem">Cancel request</button>`
     : '';
   return `
     <div style="padding:1rem;border:1.5px solid var(--paper3);border-radius:10px;margin-bottom:0.8rem">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>
           <div style="font-weight:600;font-size:0.95rem">${TYPE_LABELS[b.type] || b.type}</div>
           <div style="color:var(--ink2);font-size:0.85rem;margin-top:0.2rem">
@@ -180,34 +255,24 @@ async function bookSession(e) {
   e.preventDefault();
   const status = document.getElementById('book-status');
   const btn = e.target.querySelector('button[type=submit]');
-  btn.disabled = true;
-  btn.textContent = 'Sending…';
-
+  btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    await apiFetch('/client/bookings', {
-      method: 'POST',
-      body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
-    });
+    await apiFetch('/client/bookings', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
     status.className = 'form-status success';
     status.textContent = '✓ Booking request sent! I\'ll confirm within 24 hours.';
     e.target.reset();
     document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
     loadBookings();
   } catch(err) {
-    status.className = 'form-status error';
-    status.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send booking request →';
+    status.className = 'form-status error'; status.textContent = err.message;
+  } finaly {
+    btn.disabled = false; btn.textContent = 'Send booking request →';
   }
 }
 
 async function cancelBooking(id) {
   if (!confirm('Cancel this booking request?')) return;
-  try {
-    await apiFetch('/client/bookings/' + id, { method: 'DELETE' });
-    loadBookings();
-  } catch(e) { alert('Failed: ' + e.message); }
+  try { await apiFetch('/client/bookings/' + id, { method: 'DELETE' }); loadBookings(); } catch(e) { alert('Failed: ' + e.message); }
 }
 
 loadBookings();
@@ -232,6 +297,5 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-
 </body>
 </html>
