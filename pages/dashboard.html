@@ -7,6 +7,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    
+    /* Force persistent vertical scrollbar track to stop width layout popping */
+    html {
+      overflow-y: scroll;
+    }
+
     :root{
       --navy:#0d2353;--navy2:#1a3a7a;--accent:#1a5cff;--gold:#c9952a;--gold2:#f5c842;
       --white:#fff;--bg:#f4f6fb;--bg2:#eef1f8;
@@ -49,7 +55,8 @@
     .sb-user a{display:block;margin-top:.4rem;font-size:.75rem;color:var(--gold2);text-decoration:none}
 
     /* ── MAIN ── */
-    .main{margin-left:240px;min-height:100vh}
+    /* Prevent subpixel-rounding horizontal shifts from layout loops */
+    .main{margin-left:240px;min-height:100vh;overflow-x:hidden;}
     .topbar{background:#fff;border-bottom:1px solid rgba(13,35,83,.08);padding:1rem 1.5rem;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem}
     .topbar h2{font-family:var(--serif);font-size:1.4rem;letter-spacing:-.02em}
     .topbar p{font-size:.8rem;color:var(--ink3);margin-top:.1rem}
@@ -60,7 +67,7 @@
     .content{padding:1.5rem}
 
     /* ── STATS ── */
-    .stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1rem;margin-bottom:1.5rem}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:1rem;margin-bottom:1.5rem}
     .sc{background:#fff;border-radius:var(--r);padding:1.2rem 1.4rem;box-shadow:var(--sh);border:1px solid rgba(13,35,83,.05);position:relative;overflow:hidden;transition:transform .2s}
     .sc:hover{transform:translateY(-2px)}
     .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -153,7 +160,6 @@
 </head>
 <body>
 
-<!-- ✅ Mobile top bar -->
 <div class="mob-bar" id="mob-bar">
   <div class="mob-brand">
     <img src="../QFA_Logo.png" alt="QFA"/>
@@ -161,10 +167,8 @@
   </div>
   <button class="mob-btn" onclick="sbOpen()">&#9776;</button>
 </div>
-<!-- ✅ Overlay for closing sidebar -->
 <div class="overlay" id="overlay" onclick="sbClose()"></div>
 
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
@@ -185,7 +189,6 @@
   </div>
 </aside>
 
-<!-- Main -->
 <div class="main">
   <div class="topbar">
     <div>
@@ -276,7 +279,6 @@
   </div>
 </div>
 
-<!-- Add Client Modal -->
 <div class="modal-ov" id="modal-client">
   <div class="modal">
     <div class="mh"><h3>Add New Client</h3><button class="mc" onclick="hide('modal-client')">✕</button></div>
@@ -301,7 +303,6 @@
   </div>
 </div>
 
-<!-- Edit Log Modal -->
 <div class="modal-ov" id="modal-edit">
   <div class="modal">
     <div class="mh"><h3>Edit Log Entry</h3><button class="mc" onclick="hide('modal-edit')">✕</button></div>
@@ -324,25 +325,30 @@
 <script>
 const API='https://freelancer-platform-9jut.onrender.com/api';
 const SH=8;
+
+/* UPDATED AUTH OBJECT: Keys matched directly to login.html properties */
 const auth={
-  token:()=>localStorage.getItem('qfa_token'),
-  user:()=>{try{return JSON.parse(localStorage.getItem('qfa_user'))}catch{return null}},
-  save:(t,u)=>{localStorage.setItem('qfa_token',t);localStorage.setItem('qfa_user',JSON.stringify(u));localStorage.setItem('qfa_lt',Date.now());},
-  clear:()=>['qfa_token','qfa_user','qfa_lt'].forEach(k=>localStorage.removeItem(k)),
+  token:()=>localStorage.getItem('token'),
+  user:()=>{try{return JSON.parse(localStorage.getItem('user'))}catch{return null}},
+  save:(t,u)=>{localStorage.setItem('token',t);localStorage.setItem('user',JSON.stringify(u));localStorage.setItem('login_time',Date.now());},
+  clear:()=>['token','user','login_time'].forEach(k=>localStorage.removeItem(k)),
   ok:()=>{
-    if(!localStorage.getItem('qfa_token'))return false;
-    if((Date.now()-parseInt(localStorage.getItem('qfa_lt')||0))/3600000>SH){auth.clear();return false;}
+    if(!localStorage.getItem('token'))return false;
+    if((Date.now()-parseInt(localStorage.getItem('login_time')||0))/3600000>SH){auth.clear();return false;}
     return true;
   },
-  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('qfa_token')})
+  hdrs:()=>({'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('token')})
 };
+
 async function api(path,opts={}){
   const r=await fetch(API+path,{...opts,headers:{...auth.hdrs(),...(opts.headers||{})}});
   if(r.status===401){auth.clear();go('login.html');return;}
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||'Failed');}
   return r.json();
 }
-(function(){
+
+// Protected execution wrap
+document.addEventListener('DOMContentLoaded', () => {
   if(!auth.ok()){go('login.html');return;}
   const u=auth.user();
   if(u&&u.role!=='freelancer'){go('client-portal.html');return;}
@@ -351,14 +357,15 @@ async function api(path,opts={}){
   document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤':'Good evening 🌙';
   document.getElementById('mpicker').value=new Date().toISOString().slice(0,7);
   document.getElementById('ld').value=new Date().toISOString().slice(0,10);
-})();
+  
+  load();
+});
 
 function go(p){window.location.href=p;}
 function logout(){auth.clear();go('login.html');}
 function show(id){document.getElementById(id).classList.add('on');}
 function hide(id){document.getElementById(id).classList.remove('on');}
 
-// ✅ Mobile sidebar
 function sbOpen(){
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('overlay').classList.add('on');
@@ -369,7 +376,6 @@ function sbClose(){
   document.getElementById('overlay').classList.remove('on');
   document.body.style.overflow='';
 }
-// Close on nav link tap
 document.querySelectorAll('.sb-nav a').forEach(a=>
   a.addEventListener('click',()=>{if(window.innerWidth<=768)sbClose();})
 );
@@ -498,8 +504,6 @@ async function addClient(e){
     e.target.reset();setTimeout(()=>{hide('modal-client');st.textContent='';},1200);load();
   }catch(e){st.className='fs er';st.textContent=e.message;}
 }
-
-load();
 </script>
 </body>
 </html>
