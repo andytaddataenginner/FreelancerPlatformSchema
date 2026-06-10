@@ -3,25 +3,165 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Book a Session — YourName</title>
+  <title>Book a Session — QFA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0d2353; --accent: #1a5cff; --gold2: #f5c842;
+      --white: #fff; --bg: #f4f6fb; --bg2: #eef1f8;
+      --ink: #0d2353; --ink2: #3a4a6a; --ink3: #7a8aaa;
+      --green: #166534; --green-bg: #dcfce7;
+      --amber: #92400e; --amber-bg: #fef3c7;
+      --red: #b91c1c; --red-bg: #fee2e2;
+      --sans: 'Outfit', system-ui, sans-serif;
+      --serif: 'Playfair Display', serif;
+      --radius: 14px; --shadow: 0 2px 20px rgba(13,35,83,0.08);
+      --paper3: rgba(13,35,83,0.1); /* Integrated fallback for layout container borders */
+    }
+    html, body { font-family: var(--sans); background: var(--bg); color: var(--ink); }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px; background: var(--navy); position: fixed;
+      top: 0; left: 0; height: 100vh; display: flex;
+      flex-direction: column; z-index: 50;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand {
+      padding: 1.1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .brand-logo { width: 36px; height: 36px; background: white; border-radius: 8px; overflow: hidden; padding: 3px; flex-shrink: 0; }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-text strong { display: block; color: white; font-size: 0.78rem; font-weight: 700; }
+    .brand-text span { font-size: 0.62rem; color: var(--gold2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .sidebar-nav { flex: 1; padding: 0.8rem 0; overflow-y: auto; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      transition: all 0.2s; border-right: 3px solid transparent;
+    }
+    .sidebar-nav a:hover { color: white; background: rgba(255,255,255,0.06); }
+    .sidebar-nav a.active { color: white; background: rgba(26,92,255,0.2); border-right-color: var(--gold2); }
+
+    .sidebar-user {
+      padding: 1rem 1.2rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem;
+    }
+    .sidebar-user strong { display: block; color: white; margin-bottom: 0.1rem; }
+    .sidebar-user span { color: rgba(255,255,255,0.4); font-size: 0.72rem; }
+    .sidebar-user a { display: block; margin-top: 0.4rem; font-size: 0.75rem; color: var(--gold2); text-decoration: none; }
+
+    /* ── MOBILE NAV ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+      background: var(--navy); padding: 0.8rem 1rem;
+      align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+    }
+    .sidebar-overlay.open { display: block; }
+    .sidebar.mobile-open { transform: translateX(0) !important; }
+
+    /* ── MAIN CONTENT CONTAINER ── */
+    .main { margin-left: 220px; flex: 1; }
+
+    .topbar {
+      background: white; border-bottom: 1px solid rgba(13,35,83,0.08);
+      padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 40;
+    }
+    .topbar h2 { font-family: var(--serif); font-size: 1.4rem; }
+    .topbar p  { font-size: 0.8rem; color: var(--ink3); margin-top: 0.1rem; }
+
+    .content { padding: 1.5rem; }
+
+    /* ── CARDS & FORMS ── */
+    .card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid rgba(13,35,83,0.05);
+      margin-bottom: 1.2rem;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; border-bottom: 1px solid var(--bg2);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .card-header h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); }
+    
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink3); }
+    
+    select, input[type=date], textarea {
+      padding: 0.65rem 0.85rem; border: 1.5px solid rgba(13,35,83,0.1);
+      border-radius: 8px; background: var(--bg); font-family: var(--sans);
+      font-size: 0.85rem; color: var(--navy); width: 100%;
+    }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); background: white; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 100px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber); }
+    .badge-gray { background: var(--bg2); color: var(--ink3); }
+
+    /* ── BUTTONS ── */
+    .btn { padding: 0.45rem 0.9rem; border-radius: 7px; font-family: var(--sans); font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .btn-primary { background: var(--navy); color: white; padding: 0.7rem 1.2rem; font-size: 0.85rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--accent); }
+    .btn-primary:disabled { background: var(--ink3); cursor: not-allowed; }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; border-radius: 5px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-red { background: var(--red-bg); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: white; }
+
+    .form-status { font-size: 0.85rem; margin-top: 0.4rem; font-weight: 500; }
+    .form-status.success { color: var(--green); }
+    .form-status.error { color: var(--red); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); width: 240px; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .mobile-header { display: flex; }
+      .topbar { top: 56px; }
+      .content { padding: 1rem; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA</span>
+  </div>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-<div class="dashboard">
+<div class="layout">
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem">
-      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
-        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
-      </div>
-      <div style="line-height:1.2">
-        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
-        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
-      </div>
+    <div class="sidebar-brand">
+      <div class="brand-logo"><img src="../QFA_Logo.png" alt="QFA"/></div>
+      <div class="brand-text"><strong>Quick Freelancing</strong><span>Agency</span></div>
     </div>
     <nav class="sidebar-nav">
       <a href="client-portal.html">📊 My Overview</a>
@@ -31,69 +171,78 @@
     </nav>
     <div class="sidebar-user">
       <strong id="user-name">Loading…</strong>
-      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+      <span>Client · QFA</span>
+      <a href="#" onclick="logout()">Sign out →</a>
     </div>
   </aside>
 
-  <main class="main-content">
-    <h2 class="page-title">Book a Session</h2>
-    <p class="page-sub">Request a meeting or working session. I'll confirm within 24 hours.</p>
-
-    <div class="card" style="max-width:620px;margin-bottom:2rem">
-      <div class="card-header"><h3>📅 New Booking Request</h3></div>
-      <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
-        <div class="form-group">
-          <label>Preferred date</label>
-          <input type="date" name="date" id="book-date" required/>
-        </div>
-        <div class="form-group">
-          <label>Preferred time</label>
-          <select name="time" required>
-            <option value="">Select time…</option>
-            <option value="09:00">9:00 AM</option>
-            <option value="10:00">10:00 AM</option>
-            <option value="11:00">11:00 AM</option>
-            <option value="13:00">1:00 PM</option>
-            <option value="14:00">2:00 PM</option>
-            <option value="15:00">3:00 PM</option>
-            <option value="16:00">4:00 PM</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Session type</label>
-          <select name="type" required>
-            <option value="">Select type…</option>
-            <option value="call">Video call / meeting</option>
-            <option value="review">Project review</option>
-            <option value="workshop">Working session</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Duration</label>
-          <select name="duration" required>
-            <option value="0.5">30 minutes</option>
-            <option value="1" selected>1 hour</option>
-            <option value="1.5">1.5 hours</option>
-            <option value="2">2 hours</option>
-          </select>
-        </div>
-        <div class="form-group" style="grid-column:1/-1">
-          <label>Message / agenda</label>
-          <textarea name="message" rows="3" placeholder="What would you like to discuss or work on?"></textarea>
-        </div>
-        <div style="grid-column:1/-1">
-          <button type="submit" class="btn-primary">Send booking request →</button>
-          <div id="book-status" class="form-status" style="margin-top:0.6rem"></div>
-        </div>
-      </form>
+  <div class="main">
+    <div class="topbar">
+      <h2>Book a Session</h2>
+      <p>Request a meeting or working session. I'll confirm within 24 hours.</p>
     </div>
 
-    <div class="card">
-      <div class="card-header"><h3>Your Sessions</h3></div>
-      <div id="bookings-list"><p style="color:var(--ink3)">Loading…</p></div>
+    <div class="content">
+      <div class="card" style="max-width:620px;">
+        <div class="card-header"><h3>📅 New Booking Request</h3></div>
+        <div style="padding: 1.2rem;">
+          <form onsubmit="bookSession(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
+            <div class="form-group">
+              <label>Preferred date</label>
+              <input type="date" name="date" id="book-date" required/>
+            </div>
+            <div class="form-group">
+              <label>Preferred time</label>
+              <select name="time" required>
+                <option value="">Select time…</option>
+                <option value="09:00">9:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="13:00">1:00 PM</option>
+                <option value="14:00">2:00 PM</option>
+                <option value="15:00">3:00 PM</option>
+                <option value="16:00">4:00 PM</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Session type</label>
+              <select name="type" required>
+                <option value="">Select type…</option>
+                <option value="call">Video call / meeting</option>
+                <option value="review">Project review</option>
+                <option value="workshop">Working session</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Duration</label>
+              <select name="duration" required>
+                <option value="0.5">30 minutes</option>
+                <option value="1" selected>1 hour</option>
+                <option value="1.5">1.5 hours</option>
+                <option value="2">2 hours</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Message / agenda</label>
+              <textarea name="message" rows="3" placeholder="What would you like to discuss or work on?"></textarea>
+            </div>
+            <div style="grid-column:1/-1">
+              <button type="submit" class="btn-primary">Send booking request →</button>
+              <div id="book-status" class="form-status"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-header"><h3>Your Sessions</h3></div>
+        <div style="padding: 1.2rem;" id="bookings-list">
+          <p style="color:var(--ink3)">Loading…</p>
+        </div>
+      </div>
     </div>
-  </main>
+  </div>
 </div>
 
 <script>
@@ -121,7 +270,12 @@ async function apiFetch(path, options = {}) {
   document.getElementById('book-date').min = new Date().toISOString().slice(0,10);
 })();
 
-function logout() { auth.clear(); window.location.href = '../index.html'; }
+function logout() { auth.clear(); window.location.href = 'login.html'; }
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
 
 const TYPE_LABELS = { call:'Video call / meeting', review:'Project review', workshop:'Working session', other:'Other' };
 
@@ -135,10 +289,8 @@ async function loadBookings() {
       return;
     }
 
-    // Normalized "now" time string comparison for stability across backends
     const todayStr = new Date().toISOString().slice(0,10);
     
-    // Fixed: Safe fallback filtering logic
     const upcoming = bookings.filter(b => {
       const bDate = b.date ? b.date.slice(0,10) : '';
       return bDate >= todayStr && b.status !== 'cancelled';
@@ -161,11 +313,10 @@ async function loadBookings() {
       html += past.map(b => bookingCard(b)).join('');
     }
 
-    // Fallback if formatting structure returns something unexpected
     list.innerHTML = html || '<p style="color:var(--ink3);font-size:0.9rem">No sessions matched filter formats.</p>';
   } catch(e) { 
     console.error(e); 
-    document.getElementById('bookings-list').innerHTML = `<p style="color:red;font-size:0.9rem">Error loading bookings: ${e.message}</p>`;
+    document.getElementById('bookings-list').innerHTML = `<p style="color:var(--red);font-size:0.9rem">Error loading bookings: ${e.message}</p>`;
   }
 }
 
@@ -174,7 +325,6 @@ function bookingCard(b) {
                    : b.status === 'pending'   ? 'badge-amber'
                    : 'badge-gray';
                    
-  // Check date strictly against string rather than instantiation instantiation
   const todayStr = new Date().toISOString().slice(0,10);
   const bDate = b.date ? b.date.slice(0,10) : '';
 
@@ -182,7 +332,6 @@ function bookingCard(b) {
     ? `<button class="btn-sm btn-red" onclick="cancelBooking(${b.id})" style="margin-top:0.6rem">Cancel request</button>`
     : '';
 
-  // Safe Date parsing fallback for UI rendering
   let formattedDate = b.date;
   try {
      formattedDate = new Date(b.date).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -192,7 +341,7 @@ function bookingCard(b) {
     <div style="padding:1rem;border:1.5px solid var(--paper3);border-radius:10px;margin-bottom:0.8rem">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
         <div>
-          <div style="font-weight:600;font-size:0.95rem">${TYPE_LABELS[b.type] || b.type}</div>
+          <div style="font-weight:600;font-size:0.95rem;color:var(--navy);">${TYPE_LABELS[b.type] || b.type}</div>
           <div style="color:var(--ink2);font-size:0.85rem;margin-top:0.2rem">
             📅 ${formattedDate}
             &nbsp;·&nbsp; 🕐 ${b.time} &nbsp;·&nbsp; ⏱ ${b.duration}h
@@ -239,29 +388,7 @@ async function cancelBooking(id) {
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
-// Initial pull
 loadBookings();
 </script>
-
-<script>
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('is-open');
-  document.getElementById('sidebar-overlay').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('is-open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
-  document.body.style.overflow = '';
-}
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) {
-    a.addEventListener('click', function() {
-      if (window.innerWidth <= 768) closeSidebar();
-    });
-  });
-});
-</script>
-
 </body>
 </html>
