@@ -7,15 +7,107 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    /* ── BASE RESET FOR MOBILES & GRID ALIGNMENT ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* ── FLEX LAYOUT STABILITY ── */
+    .dashboard { display: flex; min-height: 100vh; }
 
+    /* ── FIXED DESKTOP SIDEBAR ── */
+    .sidebar {
+      width: 240px !important; 
+      background: #0d2353 !important; 
+      position: fixed !important;
+      top: 0 !important; left: 0 !important; height: 100vh !important; 
+      display: flex !important; flex-direction: column !important; 
+      z-index: 150 !important;
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out !important;
+    }
+    .sidebar-brand {
+      padding: 1.2rem 1.5rem !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      flex-direction: row !important; justify-content: flex-start !important; width: 100% !important;
+    }
+    .sidebar-nav { 
+      flex: 1 !important; padding: 0.8rem 0 !important; overflow-y: auto !important;
+      display: flex !important; flex-direction: column !important; gap: 0.2rem !important; width: 100% !important;
+    }
+    .sidebar-nav a {
+      display: flex !important; align-items: center !important; gap: 0.7rem !important;
+      padding: 0.8rem 1.5rem !important; font-size: 0.88rem !important; font-weight: 500 !important;
+      color: rgba(255,255,255,0.65) !important; text-decoration: none !important;
+      transition: all 0.2s; border-right: 4px solid transparent !important;
+      width: 100% !important; box-sizing: border-box !important;
+      justify-content: flex-start !important;
+    }
+    .sidebar-nav a:hover { color: white !important; background: rgba(255,255,255,0.06) !important; }
+    .sidebar-nav a.active { color: white !important; background: rgba(26,92,255,0.2) !important; border-right-color: #f5c842 !important; }
+
+    .sidebar-user { 
+      padding: 1.2rem 1.5rem !important; border-top: 1px solid rgba(255,255,255,0.08) !important; 
+      font-size: 0.8rem !important; display: flex !important; flex-direction: column !important; width: 100% !important;
+    }
+
+    /* ── MOBILE HEADER BAR ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #0d2353; padding: 0.8rem 1rem; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(13,35,83,0.2);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 0.5rem; }
+    .mobile-logo img { height: 32px; background: white; border-radius: 6px; padding: 2px; }
+    .mobile-logo span { color: white; font-size: 0.85rem; font-weight: 700; }
+    .hamburger-btn {
+      background: rgba(255,255,255,0.1); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 120; backdrop-filter: blur(2px); }
+
+    /* ── RESPONSIVE MAIN CONTAINER ── */
+    .main-content { margin-left: 240px; flex: 1; padding: 2rem; position: relative; }
+
+    /* ── MOBILE MEDIA QUERIES ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.is-open { transform: translateX(0) !important; }
+      .sidebar-overlay.visible { display: block !important; }
+      .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 76px !important; }
+      .mobile-header { display: flex !important; }
+      .stats-row { grid-template-columns: 1fr 1fr !important; gap: 0.8rem !important; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body>
 
+<div class="mobile-header" id="mobile-header">
+  <div class="mobile-logo">
+    <img src="../QFA_Logo.png" alt="QFA"/>
+    <span>QFA Portal</span>
+  </div>
+  <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+</div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
 <div class="dashboard">
-  <aside class="sidebar">
-    <div class="sidebar-brand" style="padding:1.2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.7rem"><div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0"><img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/></div><div style="line-height:1.2"><div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div><div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div></div></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div style="width:38px;height:38px;background:white;border-radius:8px;overflow:hidden;padding:3px;flex-shrink:0">
+        <img src="../QFA_Logo.png" style="width:100%;height:100%;object-fit:contain"/>
+      </div>
+      <div style="line-height:1.2">
+        <div style="color:white;font-size:0.8rem;font-weight:700">Quick Freelancing</div>
+        <div style="color:#f5c842;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em">Agency</div>
+      </div>
+    </div>
     <nav class="sidebar-nav">
       <a href="client-portal.html">📊 My Overview</a>
       <a href="client-logs.html" class="active">⏱ My Time Logs</a>
@@ -23,8 +115,8 @@
       <a href="../index.html" target="_blank">🌐 Portfolio</a>
     </nav>
     <div class="sidebar-user">
-      <strong id="user-name">Loading…</strong>
-      <a href="#" onclick="logout()" style="color:var(--accent);font-size:0.8rem;margin-top:0.4rem;display:inline-block">Sign out</a>
+      <strong id="user-name" style="color:white; display:block;">Loading…</strong>
+      <a href="#" onclick="logout()" style="color:#f5c842;font-size:0.8rem;margin-top:0.4rem;display:inline-block;text-decoration:none">Sign out →</a>
     </div>
   </aside>
 
@@ -32,39 +124,36 @@
     <h2 class="page-title">My Time Logs</h2>
     <p class="page-sub">All hours logged for your projects. See what's paid and what's outstanding.</p>
 
-    <!-- Filter tabs -->
-    <div style="display:flex;gap:0.6rem;margin-bottom:1.2rem">
+    <div style="display:flex;gap:0.6rem;margin-bottom:1.2rem;flex-wrap:wrap">
       <button class="btn-sm" id="tab-all"    onclick="switchTab('all')"    style="background:var(--ink);color:white;border:none;border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">All</button>
       <button class="btn-sm" id="tab-unpaid" onclick="switchTab('unpaid')" style="background:transparent;color:var(--ink2);border:1.5px solid var(--paper3);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">⚠ Unpaid</button>
       <button class="btn-sm" id="tab-paid"   onclick="switchTab('paid')"   style="background:transparent;color:var(--ink2);border:1.5px solid var(--paper3);border-radius:6px;padding:0.5rem 1.2rem;cursor:pointer;font-family:var(--sans)">✓ Paid</button>
     </div>
 
-    <!-- Summary stats -->
-    <div class="stats-row" style="margin-bottom:1.5rem">
+    <div class="stats-row" style="margin-bottom:1.5rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
       <div class="stat-card" style="border-left:4px solid #1a6640">
-        <span class="stat-num" id="s-paid" style="color:#1a6640">$—</span>
+        <span class="stat-num" id="s-paid" style="color:#1a6640; display:block; font-size:1.5rem; font-weight:700;">$—</span>
         <span class="stat-label">Total paid</span>
       </div>
       <div class="stat-card" style="border-left:4px solid #92400e">
-        <span class="stat-num" id="s-unpaid" style="color:#92400e">$—</span>
+        <span class="stat-num" id="s-unpaid" style="color:#92400e; display:block; font-size:1.5rem; font-weight:700;">$--</span>
         <span class="stat-label">Outstanding balance</span>
       </div>
-      <div class="stat-card">
-        <span class="stat-num" id="s-hours">—</span>
+      <div class="stat-card" style="border-left:4px solid transparent">
+        <span class="stat-num" id="s-hours" style="display:block; font-size:1.5rem; font-weight:700;">—</span>
         <span class="stat-label">Total hours</span>
       </div>
-      <div class="stat-card">
-        <span class="stat-num" id="s-entries">—</span>
+      <div class="stat-card" style="border-left:4px solid transparent">
+        <span class="stat-num" id="s-entries" style="display:block; font-size:1.5rem; font-weight:700;">—</span>
         <span class="stat-label">Log entries</span>
       </div>
     </div>
 
-    <!-- Logs table -->
     <div class="card">
       <div class="card-header">
         <h3 id="table-title">All Work Logs</h3>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table>
           <thead>
             <tr>
@@ -130,7 +219,6 @@ async function loadLogs() {
 
 function switchTab(tab) {
   currentTab = tab;
-  // Update button styles
   ['all','unpaid','paid'].forEach(t => {
     const btn = document.getElementById('tab-' + t);
     btn.style.background = t === tab ? 'var(--ink)' : 'transparent';
@@ -202,6 +290,5 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-
 </body>
 </html>
